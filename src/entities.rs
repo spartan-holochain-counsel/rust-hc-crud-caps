@@ -25,11 +25,33 @@ where
     fn to_input(&self) -> T;
 }
 
+#[macro_export]
+macro_rules! entry_model {
+    ($types:ident::$name:ident( $entry:ident ) ) => {
+	entry_model!( $types::$name, $entry );
+    };
+    ($types:ident::$name:ident, $entry:ident ) => {
+	impl hc_crud::EntryModel<$types> for $entry {
+	    fn name() -> &'static str { stringify!($name) }
+	    fn get_type(&self) -> hc_crud::EntityType {
+		hc_crud::EntityType::new( &stringify!($name).to_lowercase(), &"entry".to_string() )
+	    }
+	    fn to_input(&self) -> $types {
+		$types::$name(self.clone())
+	    }
+	}
+    };
+}
+
 impl EntityType {
-    pub fn new(name: &'static str, model: &'static str) -> Self {
+    pub fn new<'a,T>(name: &'a T, model: &'a T) -> Self
+    where
+	T: 'a + ?Sized,
+	String: From<&'a T>,
+    {
 	EntityType {
-	    name: name.into(),
-	    model: model.into(),
+	    name: String::from( name ),
+	    model: String::from( model ),
 	}
     }
 }

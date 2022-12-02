@@ -74,7 +74,7 @@ function basic_tests () {
 
 	let prev_post			= post2;
 	post2				= await clients.alice.callEntity( "happy_path", "happy_path", "update_post", {
-	    "addr": post2.$action,
+	    "base": post2.$action,
 	    "properties": input,
 	});
 	// console.log( json.debug(post2) )
@@ -132,7 +132,7 @@ function basic_tests () {
 
 	    let prev_comment		= comment;
 	    comment			= await clients.alice.callEntity( "happy_path", "happy_path", "update_comment", {
-		"addr": comment.$action,
+		"base": comment.$action,
 		"properties": input,
 	    });
 
@@ -158,7 +158,7 @@ function basic_tests () {
 
 	{
 	    comment			= await clients.alice.callEntity( "happy_path", "happy_path", "move_comment_to_post", {
-		"comment_addr": comment.$action,
+		"comment_action": comment.$action,
 		"post_id": post2.$id,
 	    });
 
@@ -194,7 +194,7 @@ function basic_tests () {
 }
 
 function errors_tests () {
-    it("should fail to 'get_entity' because address is wrong entry type", async function () {
+    it("should fail to 'get_entity' because base is wrong entry type", async function () {
 	await expect_reject( async () => {
 	    let resp = await clients.alice.callEntity( "happy_path", "happy_path", "get_post", {
 		"id": comment2.$id,
@@ -205,7 +205,7 @@ function errors_tests () {
     it("should fail to update because of wrong entry type", async function () {
 	await expect_reject( async () => {
 	    await clients.alice.callEntity( "happy_path", "happy_path", "update_comment", {
-		"addr": post2.$action,
+		"base": post2.$action,
 		"properties": create_comment_input_1,
 	    });
 	}, RibosomeError, "Failed to deserialize to entry type 'Comment'" );
@@ -214,7 +214,7 @@ function errors_tests () {
     it("should fail to update because mismatched type", async function () {
 	await expect_reject( async () => {
 	    await clients.alice.callEntity( "happy_path", "happy_path", "update_post", {
-		"addr": comment2.$action,
+		"base": comment2.$action,
 		"properties": create_post_input,
 	    });
 	}, RibosomeError, "Deserialized entry to wrong type: expected 0/0 but found 0/1" );
@@ -245,7 +245,7 @@ function errors_tests () {
 	}, RibosomeError, "Deserialized entry to wrong type: expected 0/0 but found 0/1" );
     });
 
-    it("should fail to get because address is an 'update', not an 'origin' entry", async function () {
+    it("should fail to get because base is an 'update', not an 'origin' entry", async function () {
 	await expect_reject( async () => {
 	    await clients.alice.call( "happy_path", "happy_path", "get_post", {
 		"id": post2.$action,

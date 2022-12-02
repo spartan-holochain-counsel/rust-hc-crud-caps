@@ -19,6 +19,31 @@ pub use utils::{
 };
 
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GetEntityInput {
+    pub id: ActionHash,
+}
+
+impl Into<GetEntityInput> for ActionHash {
+    fn into(self) -> GetEntityInput {
+	GetEntityInput {
+	    id: self,
+	}
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UpdateEntityInput<T> {
+    pub base: ActionHash,
+    pub properties: T,
+}
+
+impl<T> UpdateEntityInput<T> {
+    pub fn new(base: ActionHash, properties: T) -> Self {
+	UpdateEntityInput { base, properties }
+    }
+}
+
 
 /// Get the entity ID for any given entity EntryHash
 pub fn get_origin_address(addr: &ActionHash) -> UtilsResult<ActionHash> {

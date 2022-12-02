@@ -11,21 +11,15 @@ const { HoloHash,
 	HoloHashError }			= HoloHashTypes;
 
 
-const PostEntity			= new EntityType("post");
-PostEntity.model("entry", content => {
+const PostEntity			= new EntityType("post", content => {
     content.published_at	= new Date( content.published_at );
     content.last_updated	= new Date( content.last_updated );
-
-    return content;
 });
 
-const CommentEntity			= new EntityType("comment");
-CommentEntity.model("entry", content => {
+const CommentEntity			= new EntityType("comment", content => {
     content.for_post		= new HoloHash( content.for_post );
     content.published_at	= new Date( content.published_at );
     content.last_updated	= new Date( content.last_updated );
-
-    return content;
 });
 
 const schema				= new Architecture([ PostEntity, CommentEntity ]);

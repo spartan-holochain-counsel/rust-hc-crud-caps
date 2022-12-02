@@ -5,23 +5,13 @@ use crate::errors::{
 };
 
 
-/// An Entity categorization format that required the name and model values
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct EntityType {
-    /// An identifier for the type of data
-    pub name: String,
-
-    /// An identifier for the data's structure
-    pub model: String,
-}
-
 /// Identifies a struct as an Entity model type
 pub trait EntryModel<T>
 where
     ScopedEntryDefIndex: for<'a> TryFrom<&'a T, Error = WasmError>,
 {
     fn name() -> &'static str;
-    fn get_type(&self) -> EntityType;
+    fn get_type(&self) -> String;
     fn to_input(&self) -> T;
 }
 
@@ -33,27 +23,14 @@ macro_rules! entry_model {
     ($types:ident::$name:ident, $entry:ident ) => {
 	impl hc_crud::EntryModel<$types> for $entry {
 	    fn name() -> &'static str { stringify!($name) }
-	    fn get_type(&self) -> hc_crud::EntityType {
-		hc_crud::EntityType::new( &stringify!($name).to_lowercase(), &"entry".to_string() )
+	    fn get_type(&self) -> String {
+		$entry::name().to_lowercase()
 	    }
 	    fn to_input(&self) -> $types {
 		$types::$name(self.clone())
 	    }
 	}
     };
-}
-
-impl EntityType {
-    pub fn new<'a,T>(name: &'a T, model: &'a T) -> Self
-    where
-	T: 'a + ?Sized,
-	String: From<&'a T>,
-    {
-	EntityType {
-	    name: String::from( name ),
-	    model: String::from( model ),
-	}
-    }
 }
 
 
@@ -71,7 +48,7 @@ pub struct Entity<T> {
 
     #[serde(rename = "type")]
     /// An identifier for the content's type and structure
-    pub ctype: EntityType,
+    pub ctype: String,
 
     /// The entity's current value
     pub content: T,
@@ -169,11 +146,10 @@ pub mod tests {
 	    id: ahash.clone(),
 	    action: hhash,
 	    address: ehash,
-	    ctype: EntityType::new( "boolean", "primitive" ),
+	    ctype: String::from("boolean"),
 	    content: true,
 	};
 
-	assert_eq!( item.ctype.name, "boolean" );
-	assert_eq!( item.ctype.model, "primitive" );
+	assert_eq!( item.ctype, String::from("boolean") );
     }
 }

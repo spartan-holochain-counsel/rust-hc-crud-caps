@@ -11,7 +11,7 @@ mod utils;
 use std::convert::TryFrom;
 use hdk::prelude::*;
 
-pub use entities::{ Entity, EmptyEntity, EntityType, EntryModel };
+pub use entities::{ Entity, EmptyEntity, EntryModel };
 pub use errors::{ UtilsResult, UtilsError };
 pub use utils::{
     now, find_latest_link, path_from_collection,

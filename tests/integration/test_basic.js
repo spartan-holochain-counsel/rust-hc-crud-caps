@@ -226,13 +226,13 @@ function errors_tests () {
 		"post_id": post.$id,
 		"comment": create_comment_input_1,
 	    });
-	}, RibosomeError, "Record not found for Entry address" );
+	}, RibosomeError, "Record not found for Action address" );
     });
 
     it("should fail to delete because wrong type", async function () {
 	await expect_reject( async () => {
 	    await clients.alice.callEntity( "happy_path", "happy_path", "delete_comment", {
-		"id": post2.$addr,
+		"id": post2.$action,
 	    });
 	}, RibosomeError, "Failed to deserialize to entry type 'Comment'" );
     });
@@ -248,7 +248,7 @@ function errors_tests () {
     it("should fail to get because address is an 'update', not an 'origin' entry", async function () {
 	await expect_reject( async () => {
 	    await clients.alice.call( "happy_path", "happy_path", "get_post", {
-		"id": post2.$addr,
+		"id": post2.$action,
 	    });
 	}, RibosomeError, "is not a Create action type" );
     });

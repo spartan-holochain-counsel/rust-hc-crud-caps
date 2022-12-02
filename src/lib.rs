@@ -21,17 +21,17 @@ pub use utils::{
 
 
 /// Get the entity ID for any given entity EntryHash
-pub fn get_origin_address(addr: &ActionHash) -> UtilsResult<EntryHash> {
+pub fn get_origin_address(addr: &ActionHash) -> UtilsResult<ActionHash> {
     let chain = trace_action_history( addr )?;
 
     // The starting 'addr' will always be in the chain so it is safe to unwrap.
-    Ok( chain.last().unwrap().1.to_owned() )
+    Ok( chain.last().unwrap().0.to_owned() )
 }
 
 /// Get the record for any given EntryHash
-pub fn fetch_record(addr: &EntryHash) -> UtilsResult<(ActionHash, Record)> {
-    let record = get( addr.to_owned(), GetOptions::latest() )?
-	.ok_or( UtilsError::EntryNotFoundError(addr.to_owned(), Some("".to_string())) )?;
+pub fn fetch_record(action: &ActionHash) -> UtilsResult<(ActionHash, Record)> {
+    let record = get( action.to_owned(), GetOptions::latest() )?
+	.ok_or( UtilsError::ActionNotFoundError(action.to_owned(), Some("".to_string())) )?;
 
     Ok( (record.action_address().to_owned(), record) )
 }
@@ -78,7 +78,7 @@ pub fn follow_updates(hash: &ActionHash, trace: Option<Vec<ActionHash>>) -> Util
 }
 
 /// Get the latest Record for any given entity ID
-pub fn fetch_record_latest(id: &EntryHash) -> UtilsResult<(ActionHash, Record)> {
+pub fn fetch_record_latest(id: &ActionHash) -> UtilsResult<(ActionHash, Record)> {
     let (action_hash, first_record) = fetch_record( id )?;
 
     match first_record.action() {
@@ -110,7 +110,7 @@ where
     let action_hash = create_entry( entry.to_input() )?;
 
     Ok(Entity {
-	id: entry_hash.to_owned(),
+	id: action_hash.to_owned(),
 	address: entry_hash,
 	action: action_hash,
 	ctype: entry.get_type(),
@@ -119,7 +119,7 @@ where
 }
 
 /// Get an entity by its ID
-pub fn get_entity<I,ET>(id: &EntryHash) -> UtilsResult<Entity<I>>
+pub fn get_entity<I,ET>(id: &ActionHash) -> UtilsResult<Entity<I>>
 where
     I: TryFrom<Record, Error = WasmError> + Clone + EntryModel<ET>,
     Entry: TryFrom<I, Error = WasmError>,
@@ -130,7 +130,7 @@ where
     let address = record
 	.action()
 	.entry_hash()
-	.ok_or(UtilsError::EntryNotFoundError(id.to_owned(), None))?;
+	.ok_or(UtilsError::ActionNotFoundError(id.to_owned(), None))?;
 
     let content : I = to_entry_type( to_type_input )?;
 
@@ -176,7 +176,7 @@ where
 }
 
 /// Delete an entity
-pub fn delete_entity<T,ET>(id: &EntryHash) -> UtilsResult<ActionHash>
+pub fn delete_entity<T,ET>(id: &ActionHash) -> UtilsResult<ActionHash>
 where
     T: TryFrom<Record, Error = WasmError> + Clone + EntryModel<ET>,
     Entry: TryFrom<T, Error = WasmError>,
@@ -191,7 +191,7 @@ where
 
 
 /// Get multiple entities for a given base and link tag filter
-pub fn get_entities<T,LT,ET>(id: &EntryHash, link_type: LT, tag: Option<Vec<u8>>) -> UtilsResult<Vec<Entity<T>>>
+pub fn get_entities<T,LT,ET>(id: &ActionHash, link_type: LT, tag: Option<Vec<u8>>) -> UtilsResult<Vec<Entity<T>>>
 where
     T: TryFrom<Record, Error = WasmError> + Clone + EntryModel<ET>,
     LT: LinkTypeFilterExt,

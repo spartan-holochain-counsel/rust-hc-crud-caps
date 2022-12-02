@@ -8,11 +8,11 @@ use hc_crud::{
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct GetEntityInput {
-    pub id: EntryHash,
+    pub id: ActionHash,
 }
 
 impl GetEntityInput {
-    pub fn new(id: EntryHash) -> Self {
+    pub fn new(id: ActionHash) -> Self {
 	GetEntityInput {
 	    id: id,
 	}
@@ -56,7 +56,7 @@ impl EntryModel<EntryTypes> for PostEntry {
 #[hdk_entry_helper]
 #[derive(Clone)]
 pub struct CommentEntry {
-    pub for_post: EntryHash,
+    pub for_post: ActionHash,
     pub message: String,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
@@ -152,7 +152,7 @@ pub fn delete_post(input: GetEntityInput) -> ExternResult<ActionHash> {
 // Comment CRUD
 #[derive(Clone, Debug, Deserialize)]
 pub struct CreateCommentInput {
-    pub post_id: EntryHash,
+    pub post_id: ActionHash,
     pub comment: CommentEntry,
 }
 #[hdk_extern]
@@ -167,7 +167,7 @@ pub fn create_comment(mut input: CreateCommentInput) -> ExternResult<Entity<Comm
     debug!("Creating new comment entry: {:?}", input.comment );
     let entity = create_entity( &input.comment )?;
 
-    entity.link_from( &input.post_id, LinkTypes::Comment, None )?;
+    entity.link_from( &input.post_id.into(), LinkTypes::Comment, None )?;
 
     Ok( entity )
 }
@@ -183,7 +183,7 @@ pub fn get_comment(input: GetEntityInput) -> ExternResult<Entity<CommentEntry>> 
 
 
 #[hdk_extern]
-pub fn get_comments_for_post(post_id: EntryHash) -> ExternResult<Vec<Entity<CommentEntry>>> {
+pub fn get_comments_for_post(post_id: ActionHash) -> ExternResult<Vec<Entity<CommentEntry>>> {
     Ok( get_entities( &post_id, LinkTypes::Comment, None )? )
 }
 
@@ -216,8 +216,8 @@ pub fn delete_comment(input: GetEntityInput) -> ExternResult<ActionHash> {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct LinkCommentToPostInput {
-    pub comment_id: EntryHash,
-    pub post_id: EntryHash,
+    pub comment_id: ActionHash,
+    pub post_id: ActionHash,
 }
 #[hdk_extern]
 pub fn link_comment_to_post (input: LinkCommentToPostInput) -> ExternResult<ActionHash> {
@@ -233,7 +233,7 @@ pub fn link_comment_to_post (input: LinkCommentToPostInput) -> ExternResult<Acti
 #[derive(Clone, Debug, Deserialize)]
 pub struct MoveCommentInput {
     pub comment_addr: ActionHash,
-    pub post_id: EntryHash,
+    pub post_id: ActionHash,
 }
 #[hdk_extern]
 pub fn move_comment_to_post (input: MoveCommentInput) -> ExternResult<Entity<CommentEntry>> {
@@ -248,7 +248,7 @@ pub fn move_comment_to_post (input: MoveCommentInput) -> ExternResult<Entity<Com
     })?;
 
     debug!("Delinking previous base to ENTRY: {:?}", current_base );
-    entity.move_link_from( LinkTypes::Comment, None, &current_base, &new_base )?;
+    entity.move_link_from( LinkTypes::Comment, None, &current_base.into(), &new_base.into() )?;
 
     Ok( entity )
 }

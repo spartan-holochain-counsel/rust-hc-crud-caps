@@ -38,8 +38,8 @@ impl EntityType {
 /// The context and content of a specific entry
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Entity<T> {
-    /// The address of the original created entry
-    pub id: EntryHash,
+    /// The address of the original create action
+    pub id: ActionHash,
 
     /// The create/update action of the current entry
     pub action: ActionHash,
@@ -58,7 +58,7 @@ pub struct Entity<T> {
 impl<T> Entity<T> {
 
     /// Link this entity to the given base with a specific tag.  Shortcut for [`hdk::prelude::create_link`]
-    pub fn link_from<L,E>(&self, base: &EntryHash, link_type: L, tag_input: Option<Vec<u8>>) -> UtilsResult<ActionHash>
+    pub fn link_from<L,E>(&self, base: &AnyLinkableHash, link_type: L, tag_input: Option<Vec<u8>>) -> UtilsResult<ActionHash>
     where
 	ScopedLinkType: TryFrom<L, Error = E>,
         WasmError: From<E>,
@@ -70,7 +70,7 @@ impl<T> Entity<T> {
     }
 
     /// Link the given target to this entity with a specific tag.  Shortcut for [`hdk::prelude::create_link`]
-    pub fn link_to<L,E>(&self, target: &EntryHash, link_type: L, tag_input: Option<Vec<u8>>) -> UtilsResult<ActionHash>
+    pub fn link_to<L,E>(&self, target: &AnyLinkableHash, link_type: L, tag_input: Option<Vec<u8>>) -> UtilsResult<ActionHash>
     where
 	ScopedLinkType: TryFrom<L, Error = E>,
         WasmError: From<E>,
@@ -82,7 +82,7 @@ impl<T> Entity<T> {
     }
 
     /// Delete an existing link from the 'current_base' and create a new link from the 'new_base'
-    pub fn move_link_from<LT,E>(&self, link_type: LT, tag_input: Option<Vec<u8>>, current_base: &EntryHash, new_base: &EntryHash) -> UtilsResult<ActionHash>
+    pub fn move_link_from<LT,E>(&self, link_type: LT, tag_input: Option<Vec<u8>>, current_base: &AnyLinkableHash, new_base: &AnyLinkableHash) -> UtilsResult<ActionHash>
     where
 	LT: LinkTypeFilterExt + Clone + std::fmt::Debug,
         ScopedLinkType: TryFrom<LT, Error = E>,
@@ -139,11 +139,12 @@ pub mod tests {
     #[test]
     fn entity_test() {
 	let bytes = rand::thread_rng().gen::<[u8; 32]>();
+	let ahash = holo_hash::ActionHash::from_raw_32( bytes.to_vec() );
 	let ehash = holo_hash::EntryHash::from_raw_32( bytes.to_vec() );
 	let hhash = holo_hash::ActionHash::from_raw_32( bytes.to_vec() );
 
 	let item = Entity {
-	    id: ehash.clone(),
+	    id: ahash.clone(),
 	    action: hhash,
 	    address: ehash,
 	    ctype: EntityType::new( "boolean", "primitive" ),

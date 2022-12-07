@@ -22,7 +22,7 @@ For information on which versions of this package work for each Holochain releas
 Example of adding to `Cargo.toml`
 ```toml
 [dependencies]
-hc_crud_caps = "0.3.0"
+hc_crud_caps = "0.1.0"
 ```
 
 Example of common imports
@@ -45,6 +45,7 @@ use hc_crud::{
     now,
     create_entity, get_entity, get_entities, update_entity, delete_entity,
     Entity, EntryModel, EntityType,
+    entry_model,
 };
 
 #[hdk_entry_helper]
@@ -63,15 +64,7 @@ pub enum EntryTypes {
     Post(PostEntry),
 }
 
-impl EntryModel<EntryTypes> for PostEntry {
-    fn name() -> &'static str { "Post" }
-    fn get_type(&self) -> EntityType {
-        EntityType::new( "post", "entry" )
-    }
-    fn to_input(&self) -> EntryTypes {
-        EntryTypes::Post(self.clone())
-    }
-}
+entry_model!( EntryTypes::Post(	PostEntry ) );
 ```
 
 #### Create an entry
@@ -126,16 +119,6 @@ pub struct CommentEntry {
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
 }
-
-impl EntryModel<EntryTypes> for CommentEntry {
-    fn name() -> &'static str { "Comment" }
-    fn get_type(&self) -> EntityType {
-        EntityType::new( "comment", "entry" )
-    }
-    fn to_input(&self) -> EntryTypes {
-        EntryTypes::Comment(self.clone())
-    }
-}
 ```
 
 Add `CommentEntry` to `EntryTypes` enum
@@ -148,6 +131,8 @@ Add `CommentEntry` to `EntryTypes` enum
 +    #[entry_def]
 +    Comment(CommentEntry),
  }
+
++entry_model!( EntryTypes::Comment( CommentEntry ) );
 ```
 
 Create a `CommentEntry` and link it to the `PostEntry`

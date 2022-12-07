@@ -254,7 +254,7 @@ function errors_tests () {
     });
 }
 
-describe("DNArepo", () => {
+describe("CAPS", () => {
 
     const holochain			= new Holochain();
 

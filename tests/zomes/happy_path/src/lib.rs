@@ -65,7 +65,7 @@ pub fn create_post(mut post: PostEntry) -> ExternResult<Entity<PostEntry>> {
 
     let pubkey = agent_info()?.agent_initial_pubkey;
 
-    entity.link_from( &pubkey.into(), LinkTypes::Post, None )?;
+    entity.link_from( &pubkey, LinkTypes::Post, None )?;
 
     Ok( entity )
 }
@@ -123,7 +123,11 @@ pub fn create_comment(mut input: CreateCommentInput) -> ExternResult<Entity<Comm
     debug!("Creating new comment entry: {:?}", input.comment );
     let entity = create_entity( &input.comment )?;
 
-    entity.link_from( &input.post_id.into(), LinkTypes::Comment, None )?;
+    let path = Path::from( format!("agents.{}", agent_info()?.agent_initial_pubkey ) );
+
+    entity.link_from( &path.path_entry_hash()?, LinkTypes::Comment, None )?;
+    entity.link_from( &input.post_id, LinkTypes::Comment, None )?;
+    entity.link_to( &input.post_id, LinkTypes::Post, None )?;
 
     Ok( entity )
 }
@@ -141,6 +145,12 @@ pub fn get_comment(input: GetEntityInput) -> ExternResult<Entity<CommentEntry>> 
 #[hdk_extern]
 pub fn get_comments_for_post(post_id: ActionHash) -> ExternResult<Vec<Entity<CommentEntry>>> {
     Ok( get_entities( &post_id, LinkTypes::Comment, None )? )
+}
+
+#[hdk_extern]
+pub fn get_comments_by_agent(agent_id: AgentPubKey) -> ExternResult<Vec<Entity<CommentEntry>>> {
+    let path = Path::from( format!("agents.{}", agent_id ) );
+    Ok( get_entities( &path.path_entry_hash()?, LinkTypes::Comment, None )? )
 }
 
 
@@ -204,7 +214,7 @@ pub fn move_comment_to_post (input: MoveCommentInput) -> ExternResult<Entity<Com
     })?;
 
     debug!("Delinking previous base to ENTRY: {:?}", current_base );
-    entity.move_link_from( LinkTypes::Comment, None, &current_base.into(), &new_base.into() )?;
+    entity.move_link_from( LinkTypes::Comment, None, &current_base, &new_base )?;
 
     Ok( entity )
 }

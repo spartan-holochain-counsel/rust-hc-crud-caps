@@ -126,6 +126,12 @@ function basic_tests () {
 	}
 
 	{
+	    let comments		= await clients.alice.callCollection( "happy_path", "happy_path", "get_comments_by_agent", clients.alice._agent );
+
+	    expect( comments		).to.have.length( 2 );
+	}
+
+	{
 	    let input			= Object.assign( {}, create_comment_input_1, {
 		"message": "I just want to tell you both, good luck. We're all counting on you.",
 	    });

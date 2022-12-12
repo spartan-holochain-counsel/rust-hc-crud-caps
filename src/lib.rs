@@ -216,15 +216,16 @@ where
 
 
 /// Get multiple entities for a given base and link tag filter
-pub fn get_entities<T,LT,ET>(id: &ActionHash, link_type: LT, tag: Option<Vec<u8>>) -> UtilsResult<Vec<Entity<T>>>
+pub fn get_entities<T,LT,ET,B>(id: &B, link_type: LT, tag: Option<Vec<u8>>) -> UtilsResult<Vec<Entity<T>>>
 where
     T: TryFrom<Record, Error = WasmError> + Clone + EntryModel<ET>,
+    B: Into<AnyLinkableHash> + Clone,
     LT: LinkTypeFilterExt,
     Entry: TryFrom<T, Error = WasmError>,
     ScopedEntryDefIndex: for<'a> TryFrom<&'a ET, Error = WasmError>,
 {
     let links_result = get_links(
-        id.to_owned(),
+        id.to_owned().into(),
 	link_type,
 	tag.map( |tag| LinkTag::new( tag ) )
     );

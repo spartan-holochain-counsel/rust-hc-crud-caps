@@ -126,7 +126,7 @@ function basic_tests () {
 	}
 
 	{
-	    let comments		= await clients.alice.callCollection( "happy_path", "happy_path", "get_comments_by_agent", clients.alice._agent );
+	    let comments		= await clients.alice.callCollection( "happy_path", "happy_path", "get_comments_by_agent", clients.alice.cellAgent() );
 
 	    expect( comments		).to.have.length( 2 );
 	}

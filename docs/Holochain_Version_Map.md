@@ -12,6 +12,12 @@ This crate's minor version is bumped whenever the HDK version changes.
 > Holochain compatibility will be based on WASM's host function usage.  Until we see how that model
 > works, it makes more sense to map versions against Holochain's versions.
 
-| Holochain Version                                                                                          | Commit Date    | Lair Version                                                                                | `hc_crud_caps` (this crate)                                              |
+| Holochain Version (pre-beta)                                                                               | Commit Date    | Lair Version                                                                                | `hc_crud_caps` (this crate)                                              |
 |------------------------------------------------------------------------------------------------------------|----------------|---------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|
 | [`v0.1.0-beta-rc.3`](https://github.com/holochain/holochain/tree/60c042dbc8cc11aef091931c2758bb3e0d816662) | *Jan 17, 2023* | [`v0.2.3`](https://github.com/holochain/lair/tree/cbfbefefe43073904a914c8181a450209a74167b) | [`v0.2.0`](https://github.com/mjbrisebois/rust-hc-crud-caps/tree/v0.2.0) |
+
+
+
+| Holochain Version (beta)                                                                         | Commit Date    | Lair Version                                                                                | `hc_crud_caps` (this crate)                                              |
+|--------------------------------------------------------------------------------------------------|----------------|---------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|
+| [`v0.1.0`](https://github.com/holochain/holochain/tree/41150668b18a57f4dc801a0b3439c1c76e149064) | *Jan 26, 2023* | [`v0.2.3`](https://github.com/holochain/lair/tree/cbfbefefe43073904a914c8181a450209a74167b) | [`v0.3.0`](https://github.com/mjbrisebois/rust-hc-crud-caps/tree/v0.3.0) |

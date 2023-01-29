@@ -19,8 +19,8 @@ let
     holochainVersionId = "custom";
     holochainVersion = {
       url = "https://github.com/holochain/holochain";
-      rev = "holochain-0.1.0-beta-rc.3"; # Jan 17, 2023 - 60c042dbc8cc11aef091931c2758bb3e0d816662
-      sha256 = "0j6asm64abymswrylh39xm9c924biccdk3zlcsbjrbz019z3rp0l";
+      rev = "holochain-0.1.0"; # Jan 26, 2023 - 41150668b18a57f4dc801a0b3439c1c76e149064
+      sha256 = "sha256-jSEWpZut7OgdBVPOpLoLPGAZT0+pnSngvc5oEsNy67M=";
       cargoLock = {
         outputHashes = {
         };

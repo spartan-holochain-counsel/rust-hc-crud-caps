@@ -750,7 +750,7 @@ dependencies = [
 
 [[package]]
 name = "hc_crud_caps"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "hdk",
  "holo_hash",

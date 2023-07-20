@@ -5,11 +5,6 @@ SHELL		= bash
 #
 # Project
 #
-preview-crate:			test-debug
-	cargo publish --dry-run
-publish-crate:			test-debug
-	CARGO_HOME=$(HOME)/.cargo cargo publish
-
 use-local-backdrop:
 	cd tests; npm uninstall @whi/holochain-backdrop
 	cd tests; npm install --save-dev ../../node-holochain-backdrop
@@ -63,6 +58,19 @@ test-integration-debug:		test-setup $(TEST_DNA)
 	cd tests; RUST_LOG=info LOG_LEVEL=silly npx mocha integration/test_basic.js
 
 
+
+#
+# Packages
+#
+preview-crate:			test-debug
+	cd mere_memory_types; cargo publish --dry-run --allow-dirty
+publish-crate:			test-debug .cargo/credentials
+	cd mere_memory_types; cargo publish
+.cargo/credentials:
+	cp ~/$@ $@
+
+
+
 #
 # Documentation
 #
@@ -70,6 +78,7 @@ test-docs:
 	cargo test --doc
 build-docs:			test-docs
 	cargo doc
+
 
 
 #
@@ -86,11 +95,11 @@ clean-files-all:	clean-remove-chaff
 clean-files-all-force:	clean-remove-chaff
 	git clean -fdx
 
-PRE_HDK_VERSION = "0.3.0-beta-dev.2"
-NEW_HDK_VERSION = "0.3.0-beta-dev.7"
+PRE_HDK_VERSION = "0.3.0-beta-dev.7"
+NEW_HDK_VERSION = "0.2.1-beta-rc.0"
 
-PRE_HH_VERSION = "0.3.0-beta-dev.1", features
-NEW_HH_VERSION = "0.3.0-beta-dev.4", features
+PRE_HH_VERSION = "0.3.0-beta-dev.4", features
+NEW_HH_VERSION = "0.2.1-beta-rc.0", features
 
 GG_REPLACE_LOCATIONS = ':(exclude)*.lock' Cargo.toml tests/zomes/
 

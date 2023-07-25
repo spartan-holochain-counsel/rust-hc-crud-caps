@@ -63,9 +63,9 @@ test-integration-debug:		test-setup $(TEST_DNA)
 # Packages
 #
 preview-crate:			test-debug
-	cd mere_memory_types; cargo publish --dry-run --allow-dirty
+	cargo publish --dry-run --allow-dirty
 publish-crate:			test-debug .cargo/credentials
-	cd mere_memory_types; cargo publish
+	cargo publish
 .cargo/credentials:
 	cp ~/$@ $@
 
@@ -95,11 +95,11 @@ clean-files-all:	clean-remove-chaff
 clean-files-all-force:	clean-remove-chaff
 	git clean -fdx
 
-PRE_HDK_VERSION = "0.3.0-beta-dev.7"
-NEW_HDK_VERSION = "0.2.1-beta-rc.0"
+PRE_HDK_VERSION = "0.2.1-beta-rc.0"
+NEW_HDK_VERSION = "=0.2.1"
 
-PRE_HH_VERSION = "0.3.0-beta-dev.4", features
-NEW_HH_VERSION = "0.2.1-beta-rc.0", features
+PRE_HH_VERSION = "0.2.1-beta-rc.0", features
+NEW_HH_VERSION = "=0.2.1", features
 
 GG_REPLACE_LOCATIONS = ':(exclude)*.lock' Cargo.toml tests/zomes/
 

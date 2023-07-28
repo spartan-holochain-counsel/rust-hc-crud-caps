@@ -5,18 +5,19 @@ SHELL		= bash
 #
 # Project
 #
+use-local-holo-hash:
+	cd tests; npm uninstall @spartan-hc/holo-hash
+	cd tests; npm install --save ../../holo-hash-js/
+use-npm-holo-hash:
+	cd tests; npm uninstall @spartan-hc/holo-hash
+	cd tests; npm install --save @spartan-hc/holo-hash
+
 use-local-backdrop:
-	cd tests; npm uninstall @whi/holochain-backdrop
+	cd tests; npm uninstall @spartan-hc/holochain-backdrop
 	cd tests; npm install --save-dev ../../node-holochain-backdrop
 use-npm-backdrop:
-	cd tests; npm uninstall @whi/holochain-backdrop
-	cd tests; npm install --save-dev @whi/holochain-backdrop
-use-local-client:
-	cd tests; npm uninstall @whi/holochain-client
-	cd tests; npm install --save-dev ../../holochain-client-js
-use-npm-client:
-	cd tests; npm uninstall @whi/holochain-client
-	cd tests; npm install --save-dev @whi/holochain-client
+	cd tests; npm uninstall @spartan-hc/holochain-backdrop
+	cd tests; npm install --save-dev @spartan-hc/holochain-backdrop
 
 use-local:		use-local-client use-local-backdrop
 use-npm:		  use-npm-client   use-npm-backdrop
@@ -55,7 +56,7 @@ tests/zomes/%.wasm:		tests/zomes/%/src/*.rs tests/zomes/%/Cargo.toml Cargo.toml 
 test-integration:		test-setup $(TEST_DNA)
 	cd tests; npx mocha integration/test_basic.js
 test-integration-debug:		test-setup $(TEST_DNA)
-	cd tests; RUST_LOG=info LOG_LEVEL=silly npx mocha integration/test_basic.js
+	cd tests; RUST_LOG=info LOG_LEVEL=trace npx mocha integration/test_basic.js
 
 
 

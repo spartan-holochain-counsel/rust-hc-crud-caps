@@ -1,23 +1,21 @@
-const path				= require('path');
-const log				= require('@whi/stdlog')(path.basename( __filename ), {
-    level: process.env.LOG_LEVEL || 'fatal',
-});
+import { Logger }			from '@whi/weblogger';
+const log				= new Logger("test-basic", process.env.LOG_LEVEL );
 
-
-const fs				= require('fs');
-const expect				= require('chai').expect;
-const { Holochain }			= require('@whi/holochain-backdrop');
-const { RibosomeError,
-	HoloHashTypes }			= require('@whi/holochain-client');
-const { HoloHash,
-	HoloHashError }			= HoloHashTypes;
-const json				= require('@whi/json');
+import fs				from 'fs';
+import path				from 'path';
+import { expect }			from 'chai';
+import { Holochain }			from '@spartan-hc/holochain-backdrop';
+import { HoloHash }			from '@spartan-hc/holo-hash';
+import json				from '@whi/json';
 // const why				= require('why-is-node-running');
 
-const { schema }			= require('./setup.js');
+import HolochainClient			from '@whi/holochain-client';
+const { RibosomeError }			= HolochainClient;
+
+import { schema }			from './setup.js';
 
 const delay				= (n) => new Promise(f => setTimeout(f, n));
-const DNA_PATH				= path.join( __dirname, "../dnas/happy_path.dna" );
+const DNA_PATH				= new URL( "../dnas/happy_path.dna", import.meta.url ).pathname;
 
 
 async function expect_reject ( cb, error, message ) {

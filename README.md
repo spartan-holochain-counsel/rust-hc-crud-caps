@@ -5,9 +5,9 @@ A CRUD library for Holochain zomes that implement the CAPS pattern (Chained, Act
 State-based)
 
 
-[![](https://img.shields.io/github/issues-raw/mjbrisebois/rust-hc-crud-caps?style=flat-square)](https://github.com/mjbrisebois/rust-hc-crud-caps/issues)
-[![](https://img.shields.io/github/issues-closed-raw/mjbrisebois/rust-hc-crud-caps?style=flat-square)](https://github.com/mjbrisebois/rust-hc-crud-caps/issues?q=is%3Aissue+is%3Aclosed)
-[![](https://img.shields.io/github/issues-pr-raw/mjbrisebois/rust-hc-crud-caps?style=flat-square)](https://github.com/mjbrisebois/rust-hc-crud-caps/pulls)
+[![](https://img.shields.io/github/issues-raw/spartan-holochain-counsel/rust-hc-crud-caps?style=flat-square)](https://github.com/spartan-holochain-counsel/rust-hc-crud-caps/issues)
+[![](https://img.shields.io/github/issues-closed-raw/spartan-holochain-counsel/rust-hc-crud-caps?style=flat-square)](https://github.com/spartan-holochain-counsel/rust-hc-crud-caps/issues?q=is%3Aissue+is%3Aclosed)
+[![](https://img.shields.io/github/issues-pr-raw/spartan-holochain-counsel/rust-hc-crud-caps?style=flat-square)](https://github.com/spartan-holochain-counsel/rust-hc-crud-caps/pulls)
 
 
 ### Holochain Version Map

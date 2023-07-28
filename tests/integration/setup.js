@@ -1,15 +1,8 @@
-const path				= require('path');
-const log				= require('@whi/stdlog')(path.basename( __filename ), {
-    level: process.env.LOG_LEVEL || 'fatal',
-});
+import { Logger }			from '@whi/weblogger';
+const log				= new Logger("test-setup", process.env.LOG_LEVEL );
 
-global.WebSocket			= require('ws');
-
-const { AgentClient,
-	HoloHashTypes }			= require('@whi/holochain-client');
-const { Architecture, EntityType }	= require('@whi/entity-architect');
-const { HoloHash,
-	HoloHashError }			= HoloHashTypes;
+import { Architecture, EntityType }	from '@whi/entity-architect';
+import { HoloHash }			from '@spartan-hc/holo-hash';
 
 
 const PostEntity			= new EntityType("post", content => {
@@ -23,9 +16,8 @@ const CommentEntity			= new EntityType("comment", content => {
     content.last_updated	= new Date( content.last_updated );
 });
 
-const schema				= new Architecture([ PostEntity, CommentEntity ]);
+export const schema			= new Architecture([ PostEntity, CommentEntity ]);
 
-
-module.exports = {
+export default {
     schema,
 };

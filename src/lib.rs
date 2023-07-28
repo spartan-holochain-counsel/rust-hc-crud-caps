@@ -1,6 +1,6 @@
 //! Other Resources
 //!
-//! - Source code - [github.com/mjbrisebois/rust-hc-crud-caps](https://github.com/mjbrisebois/rust-hc-crud-caps/)
+//! - Source code - [github.com/spartan-holochain-counsel/rust-hc-crud-caps](https://github.com/spartan-holochain-counsel/rust-hc-crud-caps/)
 //! - Cargo package - [crates.io/crates/hc_crud_caps](https://crates.io/crates/hc_crud_caps)
 //!
 

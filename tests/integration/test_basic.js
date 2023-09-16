@@ -207,7 +207,7 @@ function errors_tests () {
 	    let resp = await alice.call( "happy_path", "happy_path", "get_post", {
 		"id": comment2.$id,
 	    });
-	}, RibosomeError, "Deserialized entry to wrong type: expected 0/0 but found 0/1" );
+	}, "Deserialized entry to wrong type: expected 0/0 but found 0/1" );
     });
 
     it("should fail to update because of wrong entry type", async function () {
@@ -216,7 +216,7 @@ function errors_tests () {
 		"base": post2.$action,
 		"properties": create_comment_input_1,
 	    });
-	}, RibosomeError, "Failed to deserialize to entry type 'Comment'" );
+	}, "Failed to deserialize to entry type 'Comment'" );
     });
 
     it("should fail to update because mismatched type", async function () {
@@ -225,7 +225,7 @@ function errors_tests () {
 		"base": comment2.$action,
 		"properties": create_post_input,
 	    });
-	}, RibosomeError, "Deserialized entry to wrong type: expected 0/0 but found 0/1" );
+	}, "Deserialized entry to wrong type: expected 0/0 but found 0/1" );
     });
 
     it("should fail to create comment because post is deleted", async function () {
@@ -234,7 +234,7 @@ function errors_tests () {
 		"post_id": post.$id,
 		"comment": create_comment_input_1,
 	    });
-	}, RibosomeError, "Record not found for Action address" );
+	}, "Record not found for Action address" );
     });
 
     it("should fail to delete because wrong type", async function () {
@@ -242,7 +242,7 @@ function errors_tests () {
 	    await alice.call( "happy_path", "happy_path", "delete_comment", {
 		"id": post2.$action,
 	    });
-	}, RibosomeError, "Failed to deserialize to entry type 'Comment'" );
+	}, "Failed to deserialize to entry type 'Comment'" );
     });
 
     it("should fail to delete because mismatched type", async function () {
@@ -250,7 +250,7 @@ function errors_tests () {
 	    await alice.call( "happy_path", "happy_path", "delete_post", {
 		"id": comment2.$id,
 	    });
-	}, RibosomeError, "Deserialized entry to wrong type: expected 0/0 but found 0/1" );
+	}, "Deserialized entry to wrong type: expected 0/0 but found 0/1" );
     });
 
     it("should fail to get because base is an 'update', not an 'origin' entry", async function () {
@@ -258,7 +258,7 @@ function errors_tests () {
 	    await alice.call( "happy_path", "happy_path", "get_post", {
 		"id": post2.$action,
 	    });
-	}, RibosomeError, "is not a Create action type" );
+	}, "is not a Create action type" );
     });
 }
 

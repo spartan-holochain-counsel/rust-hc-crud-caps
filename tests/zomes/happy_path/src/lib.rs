@@ -1,3 +1,5 @@
+use hc_crud::hdk;
+
 use hdk::prelude::*;
 use hc_crud::{
     now,

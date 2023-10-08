@@ -1,7 +1,10 @@
+use crate::hdi_extensions;
+use crate::hdk;
+
 use std::convert::TryFrom;
 use hdk::prelude::*;
-use crate::errors::{
-    UtilsResult, UtilsError,
+use hdi_extensions::{
+    guest_error,
 };
 
 
@@ -57,7 +60,7 @@ pub struct Entity<T> {
 impl<T> Entity<T> {
 
     /// Link this entity to the given base with a specific tag.  Shortcut for [`hdk::prelude::create_link`]
-    pub fn link_from<L,E,B>(&self, base: &B, link_type: L, tag_input: Option<Vec<u8>>) -> UtilsResult<ActionHash>
+    pub fn link_from<L,E,B>(&self, base: &B, link_type: L, tag_input: Option<Vec<u8>>) -> ExternResult<ActionHash>
     where
 	B: Into<AnyLinkableHash> + Clone,
 	ScopedLinkType: TryFrom<L, Error = E>,
@@ -70,7 +73,7 @@ impl<T> Entity<T> {
     }
 
     /// Link the given target to this entity with a specific tag.  Shortcut for [`hdk::prelude::create_link`]
-    pub fn link_to<L,E,B>(&self, target: &B, link_type: L, tag_input: Option<Vec<u8>>) -> UtilsResult<ActionHash>
+    pub fn link_to<L,E,B>(&self, target: &B, link_type: L, tag_input: Option<Vec<u8>>) -> ExternResult<ActionHash>
     where
 	B: Into<AnyLinkableHash> + Clone,
 	ScopedLinkType: TryFrom<L, Error = E>,
@@ -83,7 +86,7 @@ impl<T> Entity<T> {
     }
 
     /// Delete an existing link from the 'current_base' and create a new link from the 'new_base'
-    pub fn move_link_from<LT,E,B>(&self, link_type: LT, tag_input: Option<Vec<u8>>, current_base: &B, new_base: &B) -> UtilsResult<ActionHash>
+    pub fn move_link_from<LT,E,B>(&self, link_type: LT, tag_input: Option<Vec<u8>>, current_base: &B, new_base: &B) -> ExternResult<ActionHash>
     where
 	B: Into<AnyLinkableHash> + Clone,
 	LT: LinkTypeFilterExt + Clone + std::fmt::Debug,
@@ -103,7 +106,9 @@ impl<T> Entity<T> {
             delete_link( current_link.create_link_hash )?;
 	}
 	else {
-	    Err(UtilsError::UnexpectedState(format!("Aborting 'move_from_link' because existing link was not found")))?;
+	    Err(guest_error!(format!(
+                "Unexpected State: Aborting 'move_from_link' because existing link was not found"
+            )))?;
 	};
 
 	let new_links = get_links(

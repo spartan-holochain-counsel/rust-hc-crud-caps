@@ -48,19 +48,19 @@ let create_comment_input_2		= {
 function basic_tests () {
     it("should test 'create_entity'", async function () {
 	post				= await client.call( "happy_path", "happy_path", "create_post", create_post_input );
-	// console.log( json.debug(post) )
+	// log.trace("%s", json.debug(post) )
 
 	expect( post.message		).to.equal( create_post_input.message );
 
 	post2				= await client.call( "happy_path", "happy_path", "create_post", create_post_input );
-	// console.log( json.debug(post2) )
+	// log.trace("%s", json.debug(post2) )
     });
 
     it("should test 'get_entity'", async function () {
 	post				= await client.call( "happy_path", "happy_path", "get_post", {
 	    "id": post.$id,
 	});
-	// console.log( json.debug(post) )
+	log.trace("%s", json.debug(post) )
 
 	expect( post.message		).to.equal( create_post_input.message );
     });
@@ -75,7 +75,7 @@ function basic_tests () {
 	    "base": post2.$action,
 	    "properties": input,
 	});
-	// console.log( json.debug(post2) )
+	// log.trace("%s", json.debug(post2) )
 
 	expect( post2.message		).to.equal( input.message );
 	expect( post2.$action		).to.not.deep.equal( prev_post.$action );
@@ -83,7 +83,7 @@ function basic_tests () {
 	post2				= await client.call( "happy_path", "happy_path", "get_post", {
 	    "id": post2.$id,
 	});
-	// console.log( json.debug(post2) )
+	// log.trace("%s", json.debug(post2) )
 
 	expect( post2.message		).to.equal( input.message );
 	expect( post2.$action		).to.not.deep.equal( prev_post.$action );
@@ -183,6 +183,7 @@ function basic_tests () {
 	    });
 
 	    let comments		= await client.call( "happy_path", "happy_path", "get_comments_for_post", post2.$id );
+	    log.trace("%s", json.debug(comments) )
 
 	    expect( comments		).to.have.length( 1 );
 	}
@@ -203,7 +204,7 @@ function errors_tests () {
 	    let resp = await client.call( "happy_path", "happy_path", "get_post", {
 		"id": comment2.$id,
 	    });
-	}, RibosomeError, "Deserialized entry to wrong type: expected 0/0 but found 0/1" );
+	}, "Deserialized entry to wrong type: expected 0/0 but found 0/1" );
     });
 
     it("should fail to update because of wrong entry type", async function () {
@@ -212,7 +213,7 @@ function errors_tests () {
 		"base": post2.$action,
 		"properties": create_comment_input_1,
 	    });
-	}, RibosomeError, "Failed to deserialize to entry type 'Comment'" );
+	}, "Serialize(Deserialize(\"missing field `for_post`\"))" );
     });
 
     it("should fail to update because mismatched type", async function () {
@@ -221,7 +222,7 @@ function errors_tests () {
 		"base": comment2.$action,
 		"properties": create_post_input,
 	    });
-	}, RibosomeError, "Deserialized entry to wrong type: expected 0/0 but found 0/1" );
+	}, "Deserialized entry to wrong type: expected 0/0 but found 0/1" );
     });
 
     it("should fail to create comment because post is deleted", async function () {
@@ -230,15 +231,15 @@ function errors_tests () {
 		"post_id": post.$id,
 		"comment": create_comment_input_1,
 	    });
-	}, RibosomeError, "Record not found for Action address" );
+	}, "Record not found @ address" );
     });
 
     it("should fail to delete because wrong type", async function () {
 	await expect_reject( async () => {
 	    await client.call( "happy_path", "happy_path", "delete_comment", {
-		"id": post2.$action,
+		"id": post2.$id,
 	    });
-	}, RibosomeError, "Failed to deserialize to entry type 'Comment'" );
+	}, "Serialize(Deserialize(\"missing field `for_post`\"))" );
     });
 
     it("should fail to delete because mismatched type", async function () {
@@ -246,7 +247,7 @@ function errors_tests () {
 	    await client.call( "happy_path", "happy_path", "delete_post", {
 		"id": comment2.$id,
 	    });
-	}, RibosomeError, "Deserialized entry to wrong type: expected 0/0 but found 0/1" );
+	}, "Deserialized entry to wrong type: expected 0/0 but found 0/1" );
     });
 
     it("should fail to get because base is an 'update', not an 'origin' entry", async function () {
@@ -254,13 +255,13 @@ function errors_tests () {
 	    await client.call( "happy_path", "happy_path", "get_post", {
 		"id": post2.$action,
 	    });
-	}, RibosomeError, "is not a Create action type" );
+	}, "is not a Create record" );
     });
 }
 
 describe("CAPS", () => {
     const holochain			= new Holochain({
-	"default_stdout_loggers": process.env.LOG_LEVEL === "silly",
+	"default_stdout_loggers": process.env.LOG_LEVEL === "trace",
     });
 
     before(async function () {
@@ -277,7 +278,7 @@ describe("CAPS", () => {
 	client				= actors.alice.test_happ.client;
 
 	client.addProcessor("output", response => {
-	    // console.log( response );
+	    // log.trace("%s", response );
 	    try {
 		return schema.deconstruct("entity", response );
 	    }
@@ -296,7 +297,7 @@ describe("CAPS", () => {
 	    catch (err) {
 	    }
 
-	    console.log( response );
+	    log.trace("%s", response );
 	    return response;
 	});
     });

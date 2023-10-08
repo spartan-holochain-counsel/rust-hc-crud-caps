@@ -13,10 +13,9 @@ name = "hc_crud"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-hdk = "=0.2.1"
-holo_hash = { version = "=0.2.1", features = [ "hashing", "encoding" ] } # needed for "from_raw_32" method
 serde = "1"
-thiserror = "1"
+whi_hdk_extensions = "=0.4.0"
 
 [dev-dependencies]
+holo_hash = { version = "=0.2.2", features = [ "hashing" ] } # needed for "from_raw_32" method
 rand = "0.8.3"

@@ -4,18 +4,29 @@
 //! - Cargo package - [crates.io/crates/hc_crud_caps](https://crates.io/crates/hc_crud_caps)
 //!
 
-mod errors;
 mod entities;
 mod utils;
 
+pub use hdk_extensions::hdi;
+pub use hdk_extensions::hdi_extensions;
+pub use hdk_extensions::hdk;
+pub use hdk_extensions;
+
 use std::convert::TryFrom;
 use hdk::prelude::*;
+use hdi_extensions::{
+    summon_create_action,
+    trace_origin_root,
+};
+use hdk_extensions::{
+    must_get,
+    follow_evolutions,
+};
 
 pub use entities::{ Entity, EmptyEntity, EntryModel };
-pub use errors::{ UtilsResult, UtilsError };
 pub use utils::{
-    now, find_latest_link, path_from_collection,
-    trace_action_history, to_entry_type,
+    now,
+    to_entry_type,
 };
 
 
@@ -45,84 +56,9 @@ impl<T> UpdateEntityInput<T> {
 }
 
 
-/// Get the entity ID for any given entity EntryHash
-pub fn get_origin_address(addr: &ActionHash) -> UtilsResult<ActionHash> {
-    let chain = trace_action_history( addr )?;
-
-    // The starting 'addr' will always be in the chain so it is safe to unwrap.
-    Ok( chain.last().unwrap().0.to_owned() )
-}
-
-/// Get the record for any given EntryHash
-pub fn fetch_record(action: &ActionHash) -> UtilsResult<(ActionHash, Record)> {
-    let record = get( action.to_owned(), GetOptions::latest() )?
-	.ok_or( UtilsError::ActionNotFoundError(action.to_owned(), Some("".to_string())) )?;
-
-    Ok( (record.action_address().to_owned(), record) )
-}
-
-/// Finds and returns the Action with the earliest timestamp from a list
-pub fn find_earliest_action(updates: Vec<SignedHashed<Action>>) -> Option<SignedHashed<Action>> {
-    if updates.len() == 0 {
-	None
-    }
-    else {
-	Some( updates.iter()
-            .fold( None, |acc, sh| {
-		let ts = sh.action().timestamp();
-		match acc {
-		    None => Some( (ts, sh.to_owned()) ),
-		    Some(current) => {
-			Some(match current.0 < ts {
-			    true => current,
-			    false => (ts, sh.to_owned()),
-			})
-		    }
-		}
-	    }).unwrap().1 )
-    }
-}
-
-
-/// Follow the trail of (earliest) updates and return the full Action path.
-pub fn follow_updates(hash: &ActionHash, trace: Option<Vec<ActionHash>>) -> UtilsResult<Vec<ActionHash>> {
-    let mut history = trace.unwrap_or( Vec::new() );
-    history.push( hash.to_owned() );
-
-    let details = get_details( hash.to_owned(), GetOptions::latest() )?
-	.ok_or( UtilsError::ActionNotFoundError(hash.to_owned(), Some("".to_string())) )?;
-    let updates = match details {
-	Details::Record(details) => details.updates,
-	Details::Entry(details) => details.updates,
-    };
-
-    Ok( match find_earliest_action( updates ) {
-	None => history,
-	Some(next_update) => follow_updates( next_update.action_address(), Some(history) )?,
-    })
-}
-
-/// Get the latest Record for any given entity ID
-pub fn fetch_record_latest(id: &ActionHash) -> UtilsResult<(ActionHash, Record)> {
-    let (action_hash, first_record) = fetch_record( id )?;
-
-    match first_record.action() {
-	Action::Create(_) => (),
-	_ => Err(UtilsError::NotOriginEntryError(action_hash.to_owned()))?,
-    }
-
-    let updates = follow_updates( &action_hash, None )?;
-    let latest_action_hash = updates.last().unwrap();
-    let record = get( latest_action_hash.to_owned(), GetOptions::latest() )?
-	.ok_or( UtilsError::ActionNotFoundError(action_hash.to_owned(), Some("".to_string())) )?;
-
-    Ok( (action_hash, record) )
-}
-
-
 
 /// Create a new entity
-pub fn create_entity<T,I,E>(entry: &T) -> UtilsResult<Entity<T>>
+pub fn create_entity<T,I,E>(entry: &T) -> ExternResult<Entity<T>>
 where
     ScopedEntryDefIndex: for<'a> TryFrom<&'a I, Error = WasmError>,
     EntryVisibility: for<'a> From<&'a I>,
@@ -144,20 +80,23 @@ where
 }
 
 /// Get an entity by its ID
-pub fn get_entity<I,ET>(id: &ActionHash) -> UtilsResult<Entity<I>>
+pub fn get_entity<I,ET>(id: &ActionHash) -> ExternResult<Entity<I>>
 where
     I: TryFrom<Record, Error = WasmError> + Clone + EntryModel<ET>,
     Entry: TryFrom<I, Error = WasmError>,
     ScopedEntryDefIndex: for<'a> TryFrom<&'a ET, Error = WasmError>,
 {
-    let (_, record) = fetch_record_latest( id )?;
-    let to_type_input = record.to_owned();
+    // Check if ID record has been deleted
+    must_get( id )?;
+    // ID must be a Create action
+    summon_create_action( id )?;
+
+    let latest_addr = follow_evolutions( &id )?.last().unwrap().to_owned();
+    let record = must_get( &latest_addr )?;
+    let content : I = to_entry_type( record.clone() )?;
     let address = record
 	.action()
-	.entry_hash()
-	.ok_or(UtilsError::ActionNotFoundError(id.to_owned(), None))?;
-
-    let content : I = to_entry_type( to_type_input )?;
+	.entry_hash().unwrap(); // to_entry_type would have failed if there was not entry
 
     Ok(Entity {
 	id: id.to_owned(),
@@ -169,7 +108,7 @@ where
 }
 
 /// Update an entity
-pub fn update_entity<T,I,F,E>(addr: &ActionHash, callback: F) -> UtilsResult<Entity<T>>
+pub fn update_entity<T,I,F,E>(addr: &ActionHash, callback: F) -> ExternResult<Entity<T>>
 where
     ScopedEntryDefIndex: for<'a> TryFrom<&'a I, Error = WasmError>,
     Entry: TryFrom<I, Error = E>,
@@ -177,19 +116,18 @@ where
     WasmError: From<E>,
     T: TryFrom<Record, Error = WasmError>,
     T: Clone + EntryModel<I>,
-    F: FnOnce(T, Record) -> UtilsResult<T>,
+    F: FnOnce(T, Record) -> ExternResult<T>,
 {
     // TODO: provide automatic check that the given address is the latest one or an optional flag
     // to indicate the intension to branch from an older update.
-    let id = get_origin_address( &addr )?;
-    let record = get( addr.to_owned(), GetOptions::latest() )?
-	.ok_or( UtilsError::ActionNotFoundError(addr.to_owned(), Some("Given origin for update is not found".to_string())) )?;
+    let (id,_) = trace_origin_root( &addr )?;
+    let record = must_get( addr )?;
 
     let current : T = to_entry_type( record.clone() )?;
     let updated_entry = callback( current, record.clone() )?;
 
     let entry_hash = hash_entry( updated_entry.to_owned() )?;
-    let action_hash = update_entry( addr.to_owned(), updated_entry.to_input() )?;
+    let action_hash = update_entry( addr.clone(), updated_entry.to_input() )?;
 
     Ok(Entity {
 	id: id,
@@ -201,22 +139,26 @@ where
 }
 
 /// Delete an entity
-pub fn delete_entity<T,ET>(id: &ActionHash) -> UtilsResult<ActionHash>
+pub fn delete_entity<T,ET>(id: &ActionHash) -> ExternResult<ActionHash>
 where
     T: TryFrom<Record, Error = WasmError> + Clone + EntryModel<ET>,
     Entry: TryFrom<T, Error = WasmError>,
     ScopedEntryDefIndex: for<'a> TryFrom<&'a ET, Error = WasmError>,
 {
-    let (action_hash, record) = fetch_record( id )?;
-    let _ : T = to_entry_type( record )?;
-    let delete_hash = delete_entry( action_hash )?;
+    // ID must be a Create action
+    summon_create_action( &id )?;
+
+    let record = must_get( id )?;
+    let _ : T = to_entry_type( record.clone() )?;
+    debug!("Deleting record of Entity ID: {}", id );
+    let delete_hash = delete_entry( id.to_owned() )?;
 
     Ok( delete_hash )
 }
 
 
 /// Get multiple entities for a given base and link tag filter
-pub fn get_entities<T,LT,ET,B>(id: &B, link_type: LT, tag: Option<Vec<u8>>) -> UtilsResult<Vec<Entity<T>>>
+pub fn get_entities<T,LT,ET,B>(id: &B, link_type: LT, tag: Option<Vec<u8>>) -> ExternResult<Vec<Entity<T>>>
 where
     T: TryFrom<Record, Error = WasmError> + Clone + EntryModel<ET>,
     B: Into<AnyLinkableHash> + Clone,
@@ -224,16 +166,16 @@ where
     Entry: TryFrom<T, Error = WasmError>,
     ScopedEntryDefIndex: for<'a> TryFrom<&'a ET, Error = WasmError>,
 {
-    let links_result = get_links(
+    let links = get_links(
         id.to_owned().into(),
 	link_type,
 	tag.map( |tag| LinkTag::new( tag ) )
-    );
-    debug!("get_entities: {:?}", links_result );
-    let links = links_result?;
+    )?;
 
+    debug!("get_entities for {} links: {:#?}", links.len(), links );
     let list = links.into_iter()
 	.filter_map(|link| {
+            debug!("Get entity for ID: {:?}", link.target );
 	    link.target.into_action_hash()
 		.and_then( |target| get_entity( &target ).ok() )
 	})

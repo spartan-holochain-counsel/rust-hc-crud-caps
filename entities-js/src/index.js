@@ -35,9 +35,9 @@ export class Entity {
 
     toJSON () {
 	return {
-	    "id":	this.$id.bytes(),
-	    "action":	this.$action.bytes(),
-	    "address":	this.$address.bytes(),
+	    "id":	this.$id.toString(),
+	    "action":	this.$action.toString(),
+	    "address":	this.$address.toString(),
 	    "type":	this.$type,
 	    "content":	Object.assign( {}, this ),
 	};

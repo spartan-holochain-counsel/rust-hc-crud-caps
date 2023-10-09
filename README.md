@@ -167,3 +167,8 @@ See [docs.rs/hc_crud_caps](https://docs.rs/hc_crud_caps/)
 ### Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md)
+
+
+## NPM Package
+
+See [entities-js/README.md](entities-js/README.md)

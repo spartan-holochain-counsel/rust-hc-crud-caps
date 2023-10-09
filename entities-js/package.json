@@ -1,0 +1,31 @@
+{
+  "name": "@spartan-hc/caps-entities",
+  "version": "0.1.0",
+  "description": "A library for transforming Entity objects for the hc_crud_caps rust crate",
+  "type": "module",
+  "main": "src/index.js",
+  "module": "src/index.js",
+  "browser": "dist/caps-entities.js",
+  "files": [
+    "README.md",
+    "src/index.js",
+    "src/utils.js",
+    "dist/**"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Matthew Brisebois <matthew.brisebois@holo.host>",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/spartan-holochain-counsel/rust-hc-crud-caps/"
+  },
+  "dependencies": {
+    "@spartan-hc/holo-hash": "^0.5.4"
+  },
+  "devDependencies": {
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4"
+  }
+}

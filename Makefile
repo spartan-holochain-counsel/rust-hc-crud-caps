@@ -1,7 +1,6 @@
 
 SHELL		= bash
 
-
 #
 # Project
 #
@@ -21,6 +20,7 @@ use-npm-backdrop:
 
 use-local:		use-local-client use-local-backdrop
 use-npm:		  use-npm-client   use-npm-backdrop
+
 
 
 #
@@ -119,3 +119,20 @@ docs-watch:
 		echo -e "\x1b[37m$$event $$dir$$file\x1b[0m";\
 		make docs;			\
 	done
+
+
+
+#
+# NPM packaging
+#
+prepare-entities-package:
+	cd entities-js; rm -f dist/*
+	cd entities-js; npx webpack
+	cd entities-js; MODE=production npx webpack
+	cd entities-js; gzip -kf dist/*.js
+preview-entities-package:	clean-files test prepare-entities-package
+	cd entities-js; npm pack --dry-run .
+create-entities-package:	clean-files test prepare-entities-package
+	cd entities-js; npm pack .
+publish-entities-package:	clean-files test prepare-entities-package
+	cd entities-js; npm publish --access public .

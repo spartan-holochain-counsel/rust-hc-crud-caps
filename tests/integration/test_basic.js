@@ -5,14 +5,18 @@ import fs				from 'fs';
 import path				from 'path';
 import { expect }			from 'chai';
 import { Holochain }			from '@spartan-hc/holochain-backdrop';
-import { HoloHash }			from '@spartan-hc/holo-hash';
+import {
+    HoloHash, AgentPubKey,
+    ActionHash, EntryHash,
+}			from '@spartan-hc/holo-hash';
 import json				from '@whi/json';
 // const why				= require('why-is-node-running');
 
-import HolochainClient			from '@whi/holochain-client';
-const { RibosomeError }			= HolochainClient;
-
-import { schema }			from './setup.js';
+import {
+    AppInterfaceClient,
+}					from '@spartan-hc/app-interface-client';
+import { Zomelet }			from '@spartan-hc/zomelets';
+import { Entity }			from '@spartan-hc/caps-entities';
 
 const delay				= (n) => new Promise(f => setTimeout(f, n));
 const DNA_PATH				= new URL( "../dnas/happy_path.dna", import.meta.url ).pathname;
@@ -30,8 +34,88 @@ async function expect_reject ( cb, error, message ) {
 }
 
 
-let client;
-let actors;
+const APP_PORT				= 23_567;
+const DNA_NAME				= "happy_path";
+
+
+describe("CAPS", () => {
+    const holochain			= new Holochain({
+	"default_stdout_loggers": process.env.LOG_LEVEL === "trace",
+    });
+
+    before(async function () {
+	this.timeout( 30_000 );
+
+	const actors			= await holochain.backdrop({
+	    "test": {
+		[DNA_NAME]:		DNA_PATH,
+	    },
+	}, {
+	    "timeout": 30_000,
+	    "app_port": APP_PORT,
+	});
+    });
+
+    describe("Basic", basic_tests.bind( this, holochain ) );
+
+    after(async () => {
+	await holochain.destroy();
+    });
+
+});
+
+
+const TestZomelet = new Zomelet({
+    // Posts
+    "create_post":		true,
+    "get_post":			true,
+    "update_post":		true,
+    "delete_post":		true,
+
+    // Comments
+    async create_comment ( input ) {
+	const comment		= await this.call( input );
+	comment.for_post	= new ActionHash( comment.for_post );
+	return comment;
+    },
+    async get_comment ( input ) {
+	const comment		= await this.call( input );
+	comment.for_post	= new ActionHash( comment.for_post );
+	return comment;
+    },
+    "update_comment":		true,
+    "delete_comment":	 	true,
+    "get_comments_for_post":	true,
+    "get_comments_by_agent":	true,
+    "link_comment_to_post":	true,
+    "move_comment_to_post":	true,
+});
+TestZomelet.addTransformer({
+    async output ( resp ) {
+	try {
+	    return new Entity( resp );
+	}
+	catch (err) {
+	}
+
+	try {
+	    return resp.map( item => new Entity( item ) );
+	}
+	catch (err) {
+	}
+
+	try {
+	    return new HoloHash( resp );
+	}
+	catch (err) {
+	}
+
+	log.trace("%s", resp );
+	return resp;
+    },
+});
+
+
 let post, post2;
 let comment, comment2;
 let create_post_input			= {
@@ -46,18 +130,37 @@ let create_comment_input_2		= {
 
 
 function basic_tests () {
+    let client;
+    let app_client;
+    let agent_context;
+    let happy_path;
+
+    before(async function () {
+	client				= new AppInterfaceClient( APP_PORT, {
+	    "logging": process.env.LOG_LEVEL || "fatal",
+	});
+	app_client			= await client.app( "test-alice" );
+	agent_context			= app_client.agent;
+
+	app_client.setCellZomelets( DNA_NAME, {
+	    "happy_path": TestZomelet,
+	});
+
+	happy_path			= app_client.cells[DNA_NAME].zomes.happy_path.functions;
+    });
+
     it("should test 'create_entity'", async function () {
-	post				= await client.call( "happy_path", "happy_path", "create_post", create_post_input );
+	post				= await happy_path.create_post( create_post_input );
 	// log.trace("%s", json.debug(post) )
 
 	expect( post.message		).to.equal( create_post_input.message );
 
-	post2				= await client.call( "happy_path", "happy_path", "create_post", create_post_input );
+	post2				= await happy_path.create_post( create_post_input );
 	// log.trace("%s", json.debug(post2) )
     });
 
     it("should test 'get_entity'", async function () {
-	post				= await client.call( "happy_path", "happy_path", "get_post", {
+	post				= await happy_path.get_post({
 	    "id": post.$id,
 	});
 	log.trace("%s", json.debug(post) )
@@ -71,7 +174,7 @@ function basic_tests () {
 	});
 
 	let prev_post			= post2;
-	post2				= await client.call( "happy_path", "happy_path", "update_post", {
+	post2				= await happy_path.update_post({
 	    "base": post2.$action,
 	    "properties": input,
 	});
@@ -80,7 +183,7 @@ function basic_tests () {
 	expect( post2.message		).to.equal( input.message );
 	expect( post2.$action		).to.not.deep.equal( prev_post.$action );
 
-	post2				= await client.call( "happy_path", "happy_path", "get_post", {
+	post2				= await happy_path.get_post({
 	    "id": post2.$id,
 	});
 	// log.trace("%s", json.debug(post2) )
@@ -93,7 +196,7 @@ function basic_tests () {
 	this.timeout( 5_000 );
 	{
 	    create_comment_input_1.for_post = post.$id;
-	    comment			= await client.call( "happy_path", "happy_path", "create_comment", {
+	    comment				= await happy_path.create_comment({
 		"post_id": post.$id,
 		"comment": create_comment_input_1,
 	    });
@@ -102,14 +205,14 @@ function basic_tests () {
 	    expect( comment.for_post		).to.deep.equal( post.$id );
 
 	    create_comment_input_2.for_post = post2.$id;
-	    comment2			= await client.call( "happy_path", "happy_path", "create_comment", {
+	    comment2				= await happy_path.create_comment({
 		"post_id": post2.$id,
 		"comment": create_comment_input_2,
 	    });
 	}
 
 	{
-	    comment			= await client.call( "happy_path", "happy_path", "get_comment", {
+	    comment				= await happy_path.get_comment({
 		"id": comment.$id,
 	    });
 
@@ -118,196 +221,147 @@ function basic_tests () {
 	}
 
 	{
-	    let comments		= await client.call( "happy_path", "happy_path", "get_comments_for_post", post.$id );
+	    let comments			= await happy_path.get_comments_for_post( post.$id );
 
-	    expect( comments		).to.have.length( 1 );
+	    expect( comments			).to.have.length( 1 );
 	}
 
 	{
-	    let comments		= await client.call( "happy_path", "happy_path", "get_comments_by_agent", client.cellAgent() );
+	    let comments			= await happy_path.get_comments_by_agent( agent_context.cell_agent );
 
-	    expect( comments		).to.have.length( 2 );
+	    expect( comments			).to.have.length( 2 );
 	}
 
 	{
-	    let input			= Object.assign( {}, create_comment_input_1, {
+	    let input				= Object.assign( {}, create_comment_input_1, {
 		"message": "I just want to tell you both, good luck. We're all counting on you.",
 	    });
 
-	    let prev_comment		= comment;
-	    comment			= await client.call( "happy_path", "happy_path", "update_comment", {
+	    let prev_comment			= comment;
+	    comment				= await happy_path.update_comment({
 		"base": comment.$action,
 		"properties": input,
 	    });
 
-	    expect( comment.$action	).to.not.deep.equal( prev_comment.$action );
+	    expect( comment.$action		).to.not.deep.equal( prev_comment.$action );
 
-	    let comments		= await client.call( "happy_path", "happy_path", "get_comments_for_post", post.$id );
+	    let comments			= await happy_path.get_comments_for_post( post.$id );
 
-	    expect( comments		).to.have.length( 1 );
-	    expect( comments[0].message	).to.equal( input.message );
-	    expect( comments[0].$action	).to.not.deep.equal( prev_comment.$action );
+	    expect( comments			).to.have.length( 1 );
+	    expect( comments[0].message		).to.equal( input.message );
+	    expect( comments[0].$action		).to.not.deep.equal( prev_comment.$action );
 	}
 
 	{
-	    await client.call( "happy_path", "happy_path", "link_comment_to_post", {
+	    await happy_path.link_comment_to_post({
 		"comment_id": comment.$id,
 		"post_id": post2.$id,
 	    });
 
-	    let comments		= await client.call( "happy_path", "happy_path", "get_comments_for_post", post2.$id );
+	    let comments			= await happy_path.get_comments_for_post( post2.$id );
 
-	    expect( comments		).to.have.length( 2 );
+	    expect( comments			).to.have.length( 2 );
 	}
 
 	{
-	    comment			= await client.call( "happy_path", "happy_path", "move_comment_to_post", {
+	    comment				= await happy_path.move_comment_to_post({
 		"comment_action": comment.$action,
 		"post_id": post2.$id,
 	    });
 
-	    expect( comment.for_post	).to.not.deep.equal( post.$id );
+	    expect( comment.for_post		).to.not.deep.equal( post.$id );
 
-	    let comments		= await client.call( "happy_path", "happy_path", "get_comments_for_post", post.$id );
+	    let comments			= await happy_path.get_comments_for_post( post.$id );
 
-	    expect( comments		).to.have.length( 0 );
+	    expect( comments			).to.have.length( 0 );
 
-	    let comments2		= await client.call( "happy_path", "happy_path", "get_comments_for_post", post2.$id );
+	    let comments2			= await happy_path.get_comments_for_post( post2.$id );
 
-	    expect( comments2		).to.have.length( 2 );
+	    expect( comments2			).to.have.length( 2 );
 	}
 
 	{
-	    let delete_hash		= await client.call( "happy_path", "happy_path", "delete_comment", {
+	    let delete_hash			= await happy_path.delete_comment({
 		"id": comment.$id,
 	    });
 
-	    let comments		= await client.call( "happy_path", "happy_path", "get_comments_for_post", post2.$id );
+	    let comments			= await happy_path.get_comments_for_post( post2.$id );
 	    log.trace("%s", json.debug(comments) )
 
-	    expect( comments		).to.have.length( 1 );
+	    expect( comments			).to.have.length( 1 );
 	}
     });
 
     it("should test 'delete_entity'", async function () {
-	let delete_hash			= await client.call( "happy_path", "happy_path", "delete_post", {
+	let delete_hash				= await happy_path.delete_post({
 	    "id": post.$id,
 	});
 
-	expect( delete_hash		).to.be.a("ActionHash");
-    });
-}
-
-function errors_tests () {
-    it("should fail to 'get_entity' because base is wrong entry type", async function () {
-	await expect_reject( async () => {
-	    let resp = await client.call( "happy_path", "happy_path", "get_post", {
-		"id": comment2.$id,
-	    });
-	}, "Deserialized entry to wrong type: expected 0/0 but found 0/1" );
+	expect( delete_hash			).to.be.a("ActionHash");
     });
 
-    it("should fail to update because of wrong entry type", async function () {
-	await expect_reject( async () => {
-	    await client.call( "happy_path", "happy_path", "update_comment", {
-		"base": post2.$action,
-		"properties": create_comment_input_1,
-	    });
-	}, "Serialize(Deserialize(\"missing field `for_post`\"))" );
-    });
-
-    it("should fail to update because mismatched type", async function () {
-	await expect_reject( async () => {
-	    await client.call( "happy_path", "happy_path", "update_post", {
-		"base": comment2.$action,
-		"properties": create_post_input,
-	    });
-	}, "Deserialized entry to wrong type: expected 0/0 but found 0/1" );
-    });
-
-    it("should fail to create comment because post is deleted", async function () {
-	await expect_reject( async () => {
-	    await client.call( "happy_path", "happy_path", "create_comment", {
-		"post_id": post.$id,
-		"comment": create_comment_input_1,
-	    });
-	}, "Record not found @ address" );
-    });
-
-    it("should fail to delete because wrong type", async function () {
-	await expect_reject( async () => {
-	    await client.call( "happy_path", "happy_path", "delete_comment", {
-		"id": post2.$id,
-	    });
-	}, "Serialize(Deserialize(\"missing field `for_post`\"))" );
-    });
-
-    it("should fail to delete because mismatched type", async function () {
-	await expect_reject( async () => {
-	    await client.call( "happy_path", "happy_path", "delete_post", {
-		"id": comment2.$id,
-	    });
-	}, "Deserialized entry to wrong type: expected 0/0 but found 0/1" );
-    });
-
-    it("should fail to get because base is an 'update', not an 'origin' entry", async function () {
-	await expect_reject( async () => {
-	    await client.call( "happy_path", "happy_path", "get_post", {
-		"id": post2.$action,
-	    });
-	}, "is not a Create record" );
-    });
-}
-
-describe("CAPS", () => {
-    const holochain			= new Holochain({
-	"default_stdout_loggers": process.env.LOG_LEVEL === "trace",
-    });
-
-    before(async function () {
-	this.timeout( 30_000 );
-
-	const actors			= await holochain.backdrop({
-	    "test_happ": {
-		"happy_path": DNA_PATH,
-	    },
-	}, {
-	    "timeout": 30_000,
+    describe("Errors", () => {
+	it("should fail to 'get_entity' because base is wrong entry type", async function () {
+	    await expect_reject( async () => {
+		await happy_path.get_post({
+		    "id": comment2.$id,
+		});
+	    }, "Deserialized entry to wrong type: expected 0/0 but found 0/1" );
 	});
 
-	client				= actors.alice.test_happ.client;
+	it("should fail to update because of wrong entry type", async function () {
+	    await expect_reject( async () => {
+		await happy_path.update_comment({
+		    "base": post2.$action,
+		    "properties": create_comment_input_1,
+		});
+	    }, "Serialize(Deserialize(\"missing field `for_post`\"))" );
+	});
 
-	client.addProcessor("output", response => {
-	    // log.trace("%s", response );
-	    try {
-		return schema.deconstruct("entity", response );
-	    }
-	    catch (err) {
-	    }
+	it("should fail to update because mismatched type", async function () {
+	    await expect_reject( async () => {
+		await happy_path.update_post({
+		    "base": comment2.$action,
+		    "properties": create_post_input,
+		});
+	    }, "Deserialized entry to wrong type: expected 0/0 but found 0/1" );
+	});
 
-	    try {
-		return response.map( entity => schema.deconstruct( "entity", entity ) );
-	    }
-	    catch (err) {
-	    }
+	it("should fail to create comment because post is deleted", async function () {
+	    await expect_reject( async () => {
+		await happy_path.create_comment({
+		    "post_id": post.$id,
+		    "comment": create_comment_input_1,
+		});
+	    }, "Record not found @ address" );
+	});
 
-	    try {
-		return new HoloHash( response );
-	    }
-	    catch (err) {
-	    }
+	it("should fail to delete because wrong type", async function () {
+	    await expect_reject( async () => {
+		await happy_path.delete_comment({
+		    "id": post2.$id,
+		});
+	    }, "Serialize(Deserialize(\"missing field `for_post`\"))" );
+	});
 
-	    log.trace("%s", response );
-	    return response;
+	it("should fail to delete because mismatched type", async function () {
+	    await expect_reject( async () => {
+		await happy_path.delete_post({
+		    "id": comment2.$id,
+		});
+	    }, "Deserialized entry to wrong type: expected 0/0 but found 0/1" );
+	});
+
+	it("should fail to get because base is an 'update', not an 'origin' entry", async function () {
+	    await expect_reject( async () => {
+		await happy_path.get_post({
+		    "id": post2.$action,
+		});
+	    }, "is not a Create record" );
 	});
     });
 
-    describe("Basic", basic_tests.bind( this, holochain ) );
-    describe("Errors", errors_tests.bind( this, holochain ) );
-
-    after(async () => {
-	await holochain.stop();
-	await holochain.destroy();
+    after(async function () {
+	await client.close();
     });
-
-});
+}

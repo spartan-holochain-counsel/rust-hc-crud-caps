@@ -130,6 +130,7 @@ prepare-entities-package:
 	cd entities-js; npx webpack
 	cd entities-js; MODE=production npx webpack
 	cd entities-js; gzip -kf dist/*.js
+	cd entities-js; npm i
 preview-entities-package:	clean-files test prepare-entities-package
 	cd entities-js; npm pack --dry-run .
 create-entities-package:	clean-files test prepare-entities-package

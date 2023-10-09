@@ -762,7 +762,7 @@ dependencies = [
 
 [[package]]
 name = "hc_crud_caps"
-version = "0.10.0"
+version = "0.10.1"
 dependencies = [
  "holo_hash",
  "rand",

@@ -66,19 +66,10 @@ test-integration-debug:		test-setup $(TEST_DNA)
 preview-crate:			test-debug
 	cargo publish --dry-run --allow-dirty
 publish-crate:			test-debug .cargo/credentials
+	make docs
 	cargo publish
 .cargo/credentials:
 	cp ~/$@ $@
-
-
-
-#
-# Documentation
-#
-test-docs:
-	cargo test --doc
-build-docs:			test-docs
-	cargo doc
 
 
 
@@ -107,3 +98,24 @@ GG_REPLACE_LOCATIONS = ':(exclude)*.lock' Cargo.toml tests/zomes/
 update-hdk-version:
 	git grep -l '$(PRE_HH_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_HH_VERSION)|$(NEW_HH_VERSION)|g'
 	git grep -l '$(PRE_HDKE_VERSION)' -- $(GG_REPLACE_LOCATIONS) | xargs sed -i 's|$(PRE_HDKE_VERSION)|$(NEW_HDKE_VERSION)|g'
+
+
+
+#
+# Documentation
+#
+MAIN_DOCS		= target/doc/hdk_extensions/index.html
+test-docs:
+	cargo test --doc
+$(MAIN_DOCS):		test-docs
+	cargo doc
+	@echo -e "\x1b[37mOpen docs in file://$(shell pwd)/$(MAIN_DOCS)\x1b[0m";
+docs:			$(MAIN_DOCS)
+docs-watch:
+	@inotifywait -r -m -e modify		\
+		--includei '.*\.rs'		\
+			src/			\
+	| while read -r dir event file; do	\
+		echo -e "\x1b[37m$$event $$dir$$file\x1b[0m";\
+		make docs;			\
+	done

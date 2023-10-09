@@ -20,10 +20,10 @@ pub fn now() -> ExternResult<u64> {
 /// - `T` - the expected entry type
 /// - `record` - a Record expected to have an App entry
 ///
-/// An entry type check could fail with:
+/// An entry type check could fail because of:
 ///
-/// - [`UtilsError::DeserializationError`] - indicating that it is the wrong entry type
-/// - [`UtilsError::WrongEntryTypeError`] - indicating that the successful deserialization was a coincidence
+/// - a deserializing error indicating that it is the wrong entry type
+/// - a wront entry type error indicating that the successful deserialization was a coincidence
 ///
 /// ```ignore
 /// let entry : T = to_entry_type( &record, &expected_hash )?

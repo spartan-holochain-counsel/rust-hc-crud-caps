@@ -15,6 +15,38 @@ This package is designed to work with Holochain's Conductor API interfaces.
 ### Building
 This is a library, not a binary.  No build required
 
+#### Crate Documentation
+
+```
+make docs
+```
+
+
+### Release Process
+Each release involves
+
+1. (if changed) Publishing the `hc_crud_caps` crate
+2. (if changed) Publishing the `@spartan-hc/caps-entities` NPM package
+
+
+#### Publishing Crate
+
+https://crates.io/crates/hc_crud_caps
+
+```
+make preview-crate
+make publish-crate
+```
+
+### Publishing NPM Package
+
+https://www.npmjs.com/package/@spartan-hc/caps-entities
+
+```
+make preview-entities-package
+make publish-entities-package
+```
+
 
 ### Testing
 

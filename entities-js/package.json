@@ -22,7 +22,8 @@
     "url": "https://github.com/spartan-holochain-counsel/rust-hc-crud-caps/"
   },
   "dependencies": {
-    "@spartan-hc/holo-hash": "^0.5.4"
+    "@spartan-hc/holo-hash": "^0.5.4",
+    "@whi/into-struct": "^0.1.1"
   },
   "devDependencies": {
     "webpack": "^5.88.2",

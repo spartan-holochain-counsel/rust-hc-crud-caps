@@ -23,7 +23,10 @@ use hdk_extensions::{
     follow_evolutions,
 };
 
-pub use entities::{ Entity, EmptyEntity, EntryModel };
+pub use entities::{
+    Entity, EntityId,
+    EmptyEntity, EntryModel,
+};
 pub use utils::{
     now,
     to_entry_type,

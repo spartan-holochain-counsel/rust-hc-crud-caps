@@ -4,7 +4,7 @@ use hdk::prelude::*;
 use hc_crud::{
     now,
     create_entity, get_entity, get_entities, update_entity, delete_entity,
-    Entity,
+    Entity, EntityId,
     GetEntityInput, UpdateEntityInput,
     entry_model,
 };
@@ -29,7 +29,7 @@ pub struct PostEntry {
 #[hdk_entry_helper]
 #[derive(Clone)]
 pub struct CommentEntry {
-    pub for_post: ActionHash,
+    pub for_post: EntityId,
     pub message: String,
     pub published_at: Option<u64>,
     pub last_updated: Option<u64>,
@@ -110,7 +110,7 @@ pub fn delete_post(input: GetEntityInput) -> ExternResult<ActionHash> {
 // Comment CRUD
 #[derive(Clone, Debug, Deserialize)]
 pub struct CreateCommentInput {
-    pub post_id: ActionHash,
+    pub post_id: EntityId,
     pub comment: CommentEntry,
 }
 #[hdk_extern]
@@ -145,7 +145,7 @@ pub fn get_comment(input: GetEntityInput) -> ExternResult<Entity<CommentEntry>> 
 
 
 #[hdk_extern]
-pub fn get_comments_for_post(post_id: ActionHash) -> ExternResult<Vec<Entity<CommentEntry>>> {
+pub fn get_comments_for_post(post_id: EntityId) -> ExternResult<Vec<Entity<CommentEntry>>> {
     Ok( get_entities( &post_id, LinkTypes::Comment, None )? )
 }
 
@@ -176,7 +176,7 @@ pub fn update_comment(mut input: UpdateEntityInput<CommentEntry>) -> ExternResul
 
 
 #[hdk_extern]
-pub fn delete_comment(input: GetEntityInput) -> ExternResult<ActionHash> {
+pub fn delete_comment(input: GetEntityInput) -> ExternResult<EntityId> {
     debug!("Get Comment: {:?}", input.id );
     Ok( delete_entity::<CommentEntry,EntryTypes>( &input.id )? )
 }
@@ -184,8 +184,8 @@ pub fn delete_comment(input: GetEntityInput) -> ExternResult<ActionHash> {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct LinkCommentToPostInput {
-    pub comment_id: ActionHash,
-    pub post_id: ActionHash,
+    pub comment_id: EntityId,
+    pub post_id: EntityId,
 }
 #[hdk_extern]
 pub fn link_comment_to_post (input: LinkCommentToPostInput) -> ExternResult<ActionHash> {
@@ -201,7 +201,7 @@ pub fn link_comment_to_post (input: LinkCommentToPostInput) -> ExternResult<Acti
 #[derive(Clone, Debug, Deserialize)]
 pub struct MoveCommentInput {
     pub comment_action: ActionHash,
-    pub post_id: ActionHash,
+    pub post_id: EntityId,
 }
 #[hdk_extern]
 pub fn move_comment_to_post (input: MoveCommentInput) -> ExternResult<Entity<CommentEntry>> {

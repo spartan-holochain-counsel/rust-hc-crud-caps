@@ -7,6 +7,7 @@ use hdi_extensions::{
     guest_error,
 };
 
+pub type EntityId = ActionHash;
 
 /// Identifies a struct as an Entity model type
 pub trait EntryModel<T>

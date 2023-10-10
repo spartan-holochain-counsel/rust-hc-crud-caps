@@ -87,11 +87,11 @@ clean-files-all:	clean-remove-chaff
 clean-files-all-force:	clean-remove-chaff
 	git clean -fdx
 
-PRE_HDKE_VERSION = whi_hdk_extensions = "=0.3.0"
-NEW_HDKE_VERSION = whi_hdk_extensions = "=0.4.0"
+PRE_HDKE_VERSION = whi_hdk_extensions = "0.3.0"
+NEW_HDKE_VERSION = whi_hdk_extensions = "0.4.0"
 
-PRE_HH_VERSION = "=0.2.1", features
-NEW_HH_VERSION = "=0.2.2", features
+PRE_HH_VERSION = "0.2.1", features
+NEW_HH_VERSION = "0.2.2", features
 
 GG_REPLACE_LOCATIONS = ':(exclude)*.lock' Cargo.toml tests/zomes/
 

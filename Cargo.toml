@@ -1,6 +1,6 @@
 [package]
 name = "hc_crud_caps"
-version = "0.10.2"
+version = "0.10.3"
 authors = ["Matthew Brisebois <matthew.brisebois@holo.host>"]
 edition = "2018"
 license = "CAL-1.0"

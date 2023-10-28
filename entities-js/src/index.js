@@ -27,6 +27,7 @@ export class Entity {
 	if ( this.constructor.STRUCT )
 	    data.content		= intoStruct( data.content, this.constructor.STRUCT );
 
+	set_tostringtag( this.constructor );
 	Object.assign( this, data.content );
 
 	let $id				= new ActionHash(data.id);

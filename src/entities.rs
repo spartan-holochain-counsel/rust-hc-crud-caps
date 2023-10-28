@@ -6,8 +6,10 @@ use hdk::prelude::*;
 use hdi_extensions::{
     guest_error,
 };
+use crate::{
+    EntityId,
+};
 
-pub type EntityId = ActionHash;
 
 /// Identifies a struct as an Entity model type
 pub trait EntryModel<T>
@@ -42,7 +44,7 @@ macro_rules! entry_model {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Entity<T> {
     /// The address of the original create action
-    pub id: ActionHash,
+    pub id: EntityId,
 
     /// The create/update action of the current entry
     pub action: ActionHash,

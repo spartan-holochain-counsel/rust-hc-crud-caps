@@ -134,6 +134,7 @@ function basic_tests () {
     let app_client;
     let agent_context;
     let happy_path;
+    let happy_path_csr;
 
     before(async function () {
 	client				= new AppInterfaceClient( APP_PORT, {
@@ -142,25 +143,29 @@ function basic_tests () {
 	app_client			= await client.app( "test-alice" );
 	agent_context			= app_client.agent;
 
-	app_client.setCellZomelets( DNA_NAME, {
-	    "happy_path": TestZomelet,
-	});
+	({
+	    happy_path,
+	}				= app_client.createInterface({
+	    [DNA_NAME]: {
+		"happy_path": TestZomelet,
+	    },
+	}));
 
-	happy_path			= app_client.cells[DNA_NAME].zomes.happy_path.functions;
+	happy_path_csr			= happy_path.zomes.happy_path.functions;
     });
 
     it("should test 'create_entity'", async function () {
-	post				= await happy_path.create_post( create_post_input );
+	post				= await happy_path_csr.create_post( create_post_input );
 	// log.trace("%s", json.debug(post) )
 
 	expect( post.message		).to.equal( create_post_input.message );
 
-	post2				= await happy_path.create_post( create_post_input );
+	post2				= await happy_path_csr.create_post( create_post_input );
 	// log.trace("%s", json.debug(post2) )
     });
 
     it("should test 'get_entity'", async function () {
-	post				= await happy_path.get_post({
+	post				= await happy_path_csr.get_post({
 	    "id": post.$id,
 	});
 	log.trace("%s", json.debug(post) )
@@ -174,7 +179,7 @@ function basic_tests () {
 	});
 
 	let prev_post			= post2;
-	post2				= await happy_path.update_post({
+	post2				= await happy_path_csr.update_post({
 	    "base": post2.$action,
 	    "properties": input,
 	});
@@ -183,7 +188,7 @@ function basic_tests () {
 	expect( post2.message		).to.equal( input.message );
 	expect( post2.$action		).to.not.deep.equal( prev_post.$action );
 
-	post2				= await happy_path.get_post({
+	post2				= await happy_path_csr.get_post({
 	    "id": post2.$id,
 	});
 	// log.trace("%s", json.debug(post2) )
@@ -196,7 +201,7 @@ function basic_tests () {
 	this.timeout( 5_000 );
 	{
 	    create_comment_input_1.for_post = post.$id;
-	    comment				= await happy_path.create_comment({
+	    comment				= await happy_path_csr.create_comment({
 		"post_id": post.$id,
 		"comment": create_comment_input_1,
 	    });
@@ -205,14 +210,14 @@ function basic_tests () {
 	    expect( comment.for_post		).to.deep.equal( post.$id );
 
 	    create_comment_input_2.for_post = post2.$id;
-	    comment2				= await happy_path.create_comment({
+	    comment2				= await happy_path_csr.create_comment({
 		"post_id": post2.$id,
 		"comment": create_comment_input_2,
 	    });
 	}
 
 	{
-	    comment				= await happy_path.get_comment({
+	    comment				= await happy_path_csr.get_comment({
 		"id": comment.$id,
 	    });
 
@@ -221,13 +226,13 @@ function basic_tests () {
 	}
 
 	{
-	    let comments			= await happy_path.get_comments_for_post( post.$id );
+	    let comments			= await happy_path_csr.get_comments_for_post( post.$id );
 
 	    expect( comments			).to.have.length( 1 );
 	}
 
 	{
-	    let comments			= await happy_path.get_comments_by_agent( agent_context.cell_agent );
+	    let comments			= await happy_path_csr.get_comments_by_agent( agent_context.cell_agent );
 
 	    expect( comments			).to.have.length( 2 );
 	}
@@ -238,14 +243,14 @@ function basic_tests () {
 	    });
 
 	    let prev_comment			= comment;
-	    comment				= await happy_path.update_comment({
+	    comment				= await happy_path_csr.update_comment({
 		"base": comment.$action,
 		"properties": input,
 	    });
 
 	    expect( comment.$action		).to.not.deep.equal( prev_comment.$action );
 
-	    let comments			= await happy_path.get_comments_for_post( post.$id );
+	    let comments			= await happy_path_csr.get_comments_for_post( post.$id );
 
 	    expect( comments			).to.have.length( 1 );
 	    expect( comments[0].message		).to.equal( input.message );
@@ -253,39 +258,39 @@ function basic_tests () {
 	}
 
 	{
-	    await happy_path.link_comment_to_post({
+	    await happy_path_csr.link_comment_to_post({
 		"comment_id": comment.$id,
 		"post_id": post2.$id,
 	    });
 
-	    let comments			= await happy_path.get_comments_for_post( post2.$id );
+	    let comments			= await happy_path_csr.get_comments_for_post( post2.$id );
 
 	    expect( comments			).to.have.length( 2 );
 	}
 
 	{
-	    comment				= await happy_path.move_comment_to_post({
+	    comment				= await happy_path_csr.move_comment_to_post({
 		"comment_action": comment.$action,
 		"post_id": post2.$id,
 	    });
 
 	    expect( comment.for_post		).to.not.deep.equal( post.$id );
 
-	    let comments			= await happy_path.get_comments_for_post( post.$id );
+	    let comments			= await happy_path_csr.get_comments_for_post( post.$id );
 
 	    expect( comments			).to.have.length( 0 );
 
-	    let comments2			= await happy_path.get_comments_for_post( post2.$id );
+	    let comments2			= await happy_path_csr.get_comments_for_post( post2.$id );
 
 	    expect( comments2			).to.have.length( 2 );
 	}
 
 	{
-	    let delete_hash			= await happy_path.delete_comment({
+	    let delete_hash			= await happy_path_csr.delete_comment({
 		"id": comment.$id,
 	    });
 
-	    let comments			= await happy_path.get_comments_for_post( post2.$id );
+	    let comments			= await happy_path_csr.get_comments_for_post( post2.$id );
 	    log.trace("%s", json.debug(comments) )
 
 	    expect( comments			).to.have.length( 1 );
@@ -293,7 +298,7 @@ function basic_tests () {
     });
 
     it("should test 'delete_entity'", async function () {
-	let delete_hash				= await happy_path.delete_post({
+	let delete_hash				= await happy_path_csr.delete_post({
 	    "id": post.$id,
 	});
 
@@ -303,7 +308,7 @@ function basic_tests () {
     describe("Errors", () => {
 	it("should fail to 'get_entity' because base is wrong entry type", async function () {
 	    await expect_reject( async () => {
-		await happy_path.get_post({
+		await happy_path_csr.get_post({
 		    "id": comment2.$id,
 		});
 	    }, "Deserialized entry to wrong type: expected 0/0 but found 0/1" );
@@ -311,7 +316,7 @@ function basic_tests () {
 
 	it("should fail to update because of wrong entry type", async function () {
 	    await expect_reject( async () => {
-		await happy_path.update_comment({
+		await happy_path_csr.update_comment({
 		    "base": post2.$action,
 		    "properties": create_comment_input_1,
 		});
@@ -320,7 +325,7 @@ function basic_tests () {
 
 	it("should fail to update because mismatched type", async function () {
 	    await expect_reject( async () => {
-		await happy_path.update_post({
+		await happy_path_csr.update_post({
 		    "base": comment2.$action,
 		    "properties": create_post_input,
 		});
@@ -329,7 +334,7 @@ function basic_tests () {
 
 	it("should fail to create comment because post is deleted", async function () {
 	    await expect_reject( async () => {
-		await happy_path.create_comment({
+		await happy_path_csr.create_comment({
 		    "post_id": post.$id,
 		    "comment": create_comment_input_1,
 		});
@@ -338,7 +343,7 @@ function basic_tests () {
 
 	it("should fail to delete because wrong type", async function () {
 	    await expect_reject( async () => {
-		await happy_path.delete_comment({
+		await happy_path_csr.delete_comment({
 		    "id": post2.$id,
 		});
 	    }, "Serialize(Deserialize(\"missing field `for_post`\"))" );
@@ -346,7 +351,7 @@ function basic_tests () {
 
 	it("should fail to delete because mismatched type", async function () {
 	    await expect_reject( async () => {
-		await happy_path.delete_post({
+		await happy_path_csr.delete_post({
 		    "id": comment2.$id,
 		});
 	    }, "Deserialized entry to wrong type: expected 0/0 but found 0/1" );
@@ -354,7 +359,7 @@ function basic_tests () {
 
 	it("should fail to get because base is an 'update', not an 'origin' entry", async function () {
 	    await expect_reject( async () => {
-		await happy_path.get_post({
+		await happy_path_csr.get_post({
 		    "id": post2.$action,
 		});
 	    }, "is not a Create record" );

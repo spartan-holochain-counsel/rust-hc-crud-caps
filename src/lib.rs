@@ -24,13 +24,16 @@ use hdk_extensions::{
 };
 
 pub use entities::{
-    Entity, EntityId,
-    EmptyEntity, EntryModel,
+    Entity, EmptyEntity,
+    EntryModel,
 };
 pub use utils::{
     now,
     to_entry_type,
 };
+
+
+pub type EntityId = ActionHash;
 
 
 #[derive(Debug, Serialize, Deserialize)]

@@ -7,38 +7,73 @@ import {
 }					from '@whi/into-struct';
 import {
     set_tostringtag,
-    define_hidden_prop,
+    in_heritage,
 }					from './utils.js';
 
 
 export class Entity {
     static REQUIRED_PROPERTIES		= ["id", "action", "address", "type", "content"];
 
+    #id					= null;
+    #action				= null;
+    #address				= null;
+    #type				= null;
+
     constructor ( data ) {
 	if ( Entity.REQUIRED_PROPERTIES.map(key => typeof data[key]).includes("undefined") )
 	    throw new TypeError(`Entity data is missing one of the required properties (${Entity.REQUIRED_PROPERTIES})`);
 
-	if ( typeof data.type !== "string"  )
-	    throw new TypeError(`Entity expects [type] to be a string; not type '${typeof data.type}'`);
+	set_tostringtag( this.constructor );
 
-	if ( typeof data.content !== "object" || data.content === null )
-	    throw new TypeError(`Entity content cannot be a primitive value; found content (${typeof data.content}): ${data.content}`);
+	this.$update( data );
+    }
+
+    get $id () {
+	return this.#id;
+    }
+
+    get $action () {
+	return this.#action;
+    }
+
+    get $address () {
+	return this.#address;
+    }
+
+    get $addr () {
+	return this.#address;
+    }
+
+    get $type () {
+	return this.#type;
+    }
+
+    $update ( data ) {
+	if ( in_heritage( data, "Entity" ) )
+	    data			= data.toJSON();
+
+	this.$updateContext( data );
+	this.$updateContent( data.content );
+    }
+
+    $updateContext ( ctx ) {
+	if ( typeof ctx.type !== "string"  )
+	    throw new TypeError(`Entity expects [type] to be a string; not type '${typeof ctx.type}'`);
+
+	this.#id			= new ActionHash( ctx.id );
+	this.#action			= new ActionHash( ctx.action );
+	this.#address			= new EntryHash( ctx.address );
+	this.#type			= ctx.type;
+    }
+
+    $updateContent ( content ) {
+	if ( typeof content !== "object" || content === null )
+	    throw new TypeError(`Entity content cannot be a primitive value; found content (${typeof content}): ${content}`);
 
 	if ( this.constructor.STRUCT )
-	    data.content		= intoStruct( data.content, this.constructor.STRUCT );
+	    content			= intoStruct( content, this.constructor.STRUCT );
 
-	set_tostringtag( this.constructor );
-	Object.assign( this, data.content );
-
-	let $id				= new ActionHash(data.id);
-	let $action			= new ActionHash(data.action);
-	let $addr			= new EntryHash(data.address);
-
-	define_hidden_prop( this, "$id",	$id );
-	define_hidden_prop( this, "$action",	$action );
-	define_hidden_prop( this, "$address",	$addr );
-	define_hidden_prop( this, "$addr",	$addr ); // alias to $address
-	define_hidden_prop( this, "$type",	data.type );
+	Object.assign( this, content );
     }
 
     toJSON () {
@@ -68,7 +103,7 @@ export class ScopedEntity extends Entity {
 	    scoped_zome			= scoped_zome.zome;
 
 	if ( scoped_zome?.constructor?.name !== "ScopedZomelet" )
-	    throw new TypeError(`Expected instance of ScopedZomelet for arg #2; not type '${scoped_zome.constructor.name}'`);
+	    throw new TypeError(`Expected instance of ScopedZomelet for arg #2; not type '${scoped_zome?.constructor?.name}'`);
 
 	super( entity );
 

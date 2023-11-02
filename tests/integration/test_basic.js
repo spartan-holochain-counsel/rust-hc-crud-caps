@@ -8,7 +8,7 @@ import { Holochain }			from '@spartan-hc/holochain-backdrop';
 import {
     HoloHash, AgentPubKey,
     ActionHash, EntryHash,
-}			from '@spartan-hc/holo-hash';
+}					from '@spartan-hc/holo-hash';
 import json				from '@whi/json';
 // const why				= require('why-is-node-running');
 
@@ -178,23 +178,24 @@ function basic_tests () {
 	    "message": "Goodbye, world!",
 	});
 
-	let prev_post			= post2;
-	post2				= await happy_path_csr.update_post({
+	let result			= await happy_path_csr.update_post({
 	    "base": post2.$action,
 	    "properties": input,
 	});
 	// log.trace("%s", json.debug(post2) )
 
-	expect( post2.message		).to.equal( input.message );
-	expect( post2.$action		).to.not.deep.equal( prev_post.$action );
+	expect( result.message		).to.equal( input.message );
+	expect( result.$action		).to.not.deep.equal( post2.$action );
 
-	post2				= await happy_path_csr.get_post({
+	let latest			= await happy_path_csr.get_post({
 	    "id": post2.$id,
 	});
 	// log.trace("%s", json.debug(post2) )
 
-	expect( post2.message		).to.equal( input.message );
-	expect( post2.$action		).to.not.deep.equal( prev_post.$action );
+	expect( latest.message		).to.equal( input.message );
+	expect( latest.$action		).to.not.deep.equal( post2.$action );
+
+	post2.$update( latest );
     });
 
     it("should test 'Collection'", async function () {
@@ -242,19 +243,20 @@ function basic_tests () {
 		"message": "I just want to tell you both, good luck. We're all counting on you.",
 	    });
 
-	    let prev_comment			= comment;
-	    comment				= await happy_path_csr.update_comment({
+	    let result				= await happy_path_csr.update_comment({
 		"base": comment.$action,
 		"properties": input,
 	    });
 
-	    expect( comment.$action		).to.not.deep.equal( prev_comment.$action );
+	    expect( result.$action		).to.not.deep.equal( comment.$action );
 
 	    let comments			= await happy_path_csr.get_comments_for_post( post.$id );
 
 	    expect( comments			).to.have.length( 1 );
 	    expect( comments[0].message		).to.equal( input.message );
-	    expect( comments[0].$action		).to.not.deep.equal( prev_comment.$action );
+	    expect( comments[0].$action		).to.not.deep.equal( comment.$action );
+
+	    comment.$update( result );
 	}
 
 	{

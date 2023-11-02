@@ -26,10 +26,10 @@ use-npm:		  use-npm-client   use-npm-backdrop
 #
 # Testing
 #
-tests/package-lock.json:	tests/package.json
+%/package-lock.json:		%/package.json
 	touch $@
-tests/node_modules:		tests/package-lock.json
-	cd tests; npm install
+%/node_modules:			%/package-lock.json
+	cd $*; npm install
 	touch $@
 test:				test-unit test-integration
 test-debug:			test-unit-debug test-integration-debug
@@ -125,7 +125,7 @@ docs-watch:
 #
 # NPM packaging
 #
-prepare-entities-package:
+prepare-entities-package:			entities-js/node_modules
 	cd entities-js; rm -f dist/*
 	cd entities-js; npx webpack
 	cd entities-js; MODE=production npx webpack

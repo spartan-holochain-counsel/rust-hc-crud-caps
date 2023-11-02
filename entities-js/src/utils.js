@@ -9,18 +9,36 @@ export function set_tostringtag ( cls, name ) {
     });
 }
 
-export function define_hidden_prop ( obj, key, value ) {
-    if ( obj[key] === undefined ) {
-	Object.defineProperty( obj, key, {
-	    "value": value,
-	    "writable": false,
-	    "enumerable": false,
-	    "configurable": false,
-	});
+export function heritage ( target, stop_at = "" ) {
+    if ( typeof target !== "function" ) {
+	// Empty heritage for primitive types
+	if ( target === null || typeof target !== "object" )
+	    return [];
+	else
+	    target			= target.constructor;
     }
+
+    let i				= 0;
+    let class_names			= [];
+    while ( target.name !== stop_at ) {
+	class_names.unshift( target.name );
+	target				= Object.getPrototypeOf( target );
+	i++;
+
+	if ( i > 50 )
+	    throw new Error(`heritage exceeded recursive limit (50); ${class_names.join(", ")}`);
+    }
+
+    return class_names;
 }
+
+export function in_heritage ( target, class_name ) {
+    return heritage( target ).includes( class_name );
+}
+
 
 export default {
     set_tostringtag,
-    define_hidden_prop,
+    heritage,
+    in_heritage,
 };

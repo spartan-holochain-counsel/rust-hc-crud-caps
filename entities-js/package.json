@@ -1,6 +1,6 @@
 {
   "name": "@spartan-hc/caps-entities",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "A library for transforming Entity objects for the hc_crud_caps rust crate",
   "type": "module",
   "main": "src/index.js",

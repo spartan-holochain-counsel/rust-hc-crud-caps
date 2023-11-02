@@ -25,7 +25,7 @@ export class Entity {
 
 	set_tostringtag( this.constructor );
 
-	this.$update( data );
+	Entity.prototype.$update.call( this, data );
     }
 
     get $id () {
@@ -50,10 +50,10 @@ export class Entity {
 
     $update ( data ) {
 	if ( in_heritage( data, "Entity" ) )
-	    data			= data.toJSON();
+	    data			= Entity.prototype.toJSON.call( data );
 
-	this.$updateContext( data );
-	this.$updateContent( data.content );
+	Entity.prototype.$updateContext.call( this, data );
+	Entity.prototype.$updateContent.call( this, data.content );
     }
 
     $updateContext ( ctx ) {
@@ -78,9 +78,9 @@ export class Entity {
 
     toJSON () {
 	return {
-	    "id":	this.$id.toString(),
-	    "action":	this.$action.toString(),
-	    "address":	this.$address.toString(),
+	    "id":	String( this.$id ),
+	    "action":	String( this.$action ),
+	    "address":	String( this.$address ),
 	    "type":	this.$type,
 	    "content":	Object.assign( {}, this ),
 	};

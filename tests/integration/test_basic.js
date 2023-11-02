@@ -17,6 +17,9 @@ import {
 }					from '@spartan-hc/app-interface-client';
 import { Zomelet }			from '@spartan-hc/zomelets';
 import { Entity }			from '@spartan-hc/caps-entities';
+import {
+    linearSuite,
+}					from '../utils.js';
 
 const delay				= (n) => new Promise(f => setTimeout(f, n));
 const DNA_PATH				= new URL( "../dnas/happy_path.dna", import.meta.url ).pathname;
@@ -56,7 +59,7 @@ describe("CAPS", () => {
 	});
     });
 
-    describe("Basic", basic_tests.bind( this, holochain ) );
+    linearSuite("Basic", basic_tests.bind( this, holochain ) );
 
     after(async () => {
 	await holochain.destroy();
@@ -196,6 +199,8 @@ function basic_tests () {
 	expect( latest.$action		).to.not.deep.equal( post2.$action );
 
 	post2.$update( latest );
+
+	expect( post2.$action		).to.deep.equal( latest.$action );
     });
 
     it("should test 'Collection'", async function () {
@@ -307,7 +312,7 @@ function basic_tests () {
 	expect( delete_hash			).to.be.a("ActionHash");
     });
 
-    describe("Errors", () => {
+    linearSuite("Errors", () => {
 	it("should fail to 'get_entity' because base is wrong entry type", async function () {
 	    await expect_reject( async () => {
 		await happy_path_csr.get_post({

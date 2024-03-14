@@ -19,7 +19,7 @@ fn init(_: ()) -> ExternResult<InitCallbackResult> {
 
 
 #[hdk_entry_helper]
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct PostEntry {
     pub message: String,
     pub published_at: Option<u64>,
@@ -27,7 +27,7 @@ pub struct PostEntry {
 }
 
 #[hdk_entry_helper]
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct CommentEntry {
     pub for_post: EntityId,
     pub message: String,

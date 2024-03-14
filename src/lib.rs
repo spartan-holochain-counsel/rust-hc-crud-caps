@@ -15,6 +15,7 @@ pub use hdk_extensions;
 use std::convert::TryFrom;
 use hdk::prelude::*;
 use hdi_extensions::{
+    guest_error,
     summon_create_action,
     trace_origin_root,
 };
@@ -120,8 +121,7 @@ where
     Entry: TryFrom<I, Error = E>,
     Entry: TryFrom<T, Error = E>,
     WasmError: From<E>,
-    T: TryFrom<Record, Error = WasmError>,
-    T: Clone + EntryModel<I>,
+    T: TryFrom<Record, Error = WasmError> + PartialEq + Clone + EntryModel<I>,
     F: FnOnce(T, Record) -> ExternResult<T>,
 {
     // TODO: provide automatic check that the given address is the latest one or an optional flag
@@ -130,7 +130,14 @@ where
     let record = must_get( addr )?;
 
     let current : T = to_entry_type( record.clone() )?;
-    let updated_entry = callback( current, record.clone() )?;
+    let updated_entry = callback( current.clone(), record.clone() )?;
+
+    // Fail if the entry has not changed
+    if current == updated_entry {
+        return Err(guest_error!(format!(
+            "Updated entry has no changes"
+        )))
+    }
 
     let entry_hash = hash_entry( updated_entry.to_owned() )?;
     let action_hash = update_entry( addr.clone(), updated_entry.to_input() )?;

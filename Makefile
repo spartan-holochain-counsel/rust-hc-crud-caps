@@ -67,9 +67,9 @@ test-integration:		test-setup $(TEST_DNA)
 #
 # Packages
 #
-preview-crate:			test-debug
+preview-crate:			test
 	cargo publish --dry-run --allow-dirty
-publish-crate:			test-debug .cargo/credentials
+publish-crate:			test .cargo/credentials
 	make docs
 	cargo publish
 .cargo/credentials:

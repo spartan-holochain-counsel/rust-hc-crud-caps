@@ -35,12 +35,12 @@ pub struct CommentEntry {
     pub last_updated: Option<u64>,
 }
 
-#[hdk_entry_defs]
+#[hdk_entry_types]
 #[unit_enum(UnitEntryTypes)]
 pub enum EntryTypes {
-    #[entry_def]
+    #[entry_type]
     Post(PostEntry),
-    #[entry_def]
+    #[entry_type]
     Comment(CommentEntry),
 }
 entry_model!( EntryTypes::Post(	PostEntry ) );

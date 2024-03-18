@@ -37,26 +37,26 @@ async function expect_reject ( cb, error, message ) {
 }
 
 
-const APP_PORT				= 23_567;
 const DNA_NAME				= "happy_path";
+let app_port;
 
 
 describe("CAPS", () => {
     const holochain			= new Holochain({
-	"default_stdout_loggers": process.env.LOG_LEVEL === "trace",
+	"timeout": 60_000,
+	"default_stdout_loggers": log._level > 3,
     });
 
     before(async function () {
 	this.timeout( 30_000 );
 
-	const actors			= await holochain.backdrop({
+	await holochain.backdrop({
 	    "test": {
 		[DNA_NAME]:		DNA_PATH,
 	    },
-	}, {
-	    "timeout": 30_000,
-	    "app_port": APP_PORT,
 	});
+
+	app_port			= await holochain.appPorts()[0];
     });
 
     linearSuite("Basic", basic_tests.bind( this, holochain ) );
@@ -140,7 +140,9 @@ function basic_tests () {
     let happy_path_csr;
 
     before(async function () {
-	client				= new AppInterfaceClient( APP_PORT, {
+	this.timeout( 30_000 );
+
+	client				= new AppInterfaceClient( app_port, {
 	    "logging": process.env.LOG_LEVEL || "fatal",
 	});
 	app_client			= await client.app( "test-alice" );

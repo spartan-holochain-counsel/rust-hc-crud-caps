@@ -30,6 +30,7 @@ pub use entities::{
 pub use utils::{
     now,
     to_entry_type,
+    create_link_input,
 };
 
 
@@ -43,9 +44,9 @@ pub struct GetEntityInput {
 
 impl Into<GetEntityInput> for ActionHash {
     fn into(self) -> GetEntityInput {
-	GetEntityInput {
-	    id: self,
-	}
+        GetEntityInput {
+            id: self,
+        }
     }
 }
 
@@ -57,7 +58,7 @@ pub struct UpdateEntityInput<T> {
 
 impl<T> UpdateEntityInput<T> {
     pub fn new(base: ActionHash, properties: T) -> Self {
-	UpdateEntityInput { base, properties }
+        UpdateEntityInput { base, properties }
     }
 }
 
@@ -77,11 +78,11 @@ where
     let action_hash = create_entry( entry.to_input() )?;
 
     Ok(Entity {
-	id: action_hash.to_owned(),
-	address: entry_hash,
-	action: action_hash,
-	ctype: entry.get_type(),
-	content: entry.to_owned(),
+        id: action_hash.to_owned(),
+        address: entry_hash,
+        action: action_hash,
+        ctype: entry.get_type(),
+        content: entry.to_owned(),
     })
 }
 
@@ -101,15 +102,15 @@ where
     let record = must_get( &latest_addr )?;
     let content : I = to_entry_type( record.clone() )?;
     let address = record
-	.action()
-	.entry_hash().unwrap(); // to_entry_type would have failed if there was not entry
+        .action()
+        .entry_hash().unwrap(); // to_entry_type would have failed if there was not entry
 
     Ok(Entity {
-	id: id.to_owned(),
-	action: record.action_address().to_owned(),
-	address: address.to_owned(),
-	ctype: content.get_type(),
-	content: content,
+        id: id.to_owned(),
+        action: record.action_address().to_owned(),
+        address: address.to_owned(),
+        ctype: content.get_type(),
+        content: content,
     })
 }
 
@@ -136,11 +137,11 @@ where
     let action_hash = update_entry( addr.clone(), updated_entry.to_input() )?;
 
     Ok(Entity {
-	id: id,
-	action: action_hash,
-	address: entry_hash,
-	ctype: updated_entry.get_type(),
-	content: updated_entry,
+        id: id,
+        action: action_hash,
+        address: entry_hash,
+        ctype: updated_entry.get_type(),
+        content: updated_entry,
     })
 }
 
@@ -168,24 +169,26 @@ pub fn get_entities<T,LT,ET,B>(id: &B, link_type: LT, tag: Option<Vec<u8>>) -> E
 where
     T: TryFrom<Record, Error = WasmError> + Clone + EntryModel<ET>,
     B: Into<AnyLinkableHash> + Clone,
-    LT: LinkTypeFilterExt,
+    LT: LinkTypeFilterExt + Clone,
     Entry: TryFrom<T, Error = WasmError>,
     ScopedEntryDefIndex: for<'a> TryFrom<&'a ET, Error = WasmError>,
 {
     let links = get_links(
-        id.to_owned().into(),
-	link_type,
-	tag.map( |tag| LinkTag::new( tag ) )
+        create_link_input(
+            id,
+            &link_type,
+            &tag,
+        )?
     )?;
 
     debug!("get_entities for {} links: {:#?}", links.len(), links );
     let list = links.into_iter()
-	.filter_map(|link| {
+        .filter_map(|link| {
             debug!("Get entity for ID: {:?}", link.target );
-	    link.target.into_action_hash()
-		.and_then( |target| get_entity( &target ).ok() )
-	})
-	.collect();
+            link.target.into_action_hash()
+                .and_then( |target| get_entity( &target ).ok() )
+        })
+        .collect();
 
     Ok(list)
 }

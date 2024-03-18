@@ -26,14 +26,20 @@ use-npm:		  use-npm-client   use-npm-backdrop
 #
 # Testing
 #
+DEBUG_LEVEL	       ?= warn
+TEST_ENV_VARS		= LOG_LEVEL=$(DEBUG_LEVEL)
+MOCHA_OPTS		= -n enable-source-maps
+
 %/package-lock.json:		%/package.json
 	touch $@
 %/node_modules:			%/package-lock.json
 	cd $*; npm install
 	touch $@
-test:				test-unit test-integration
-test-debug:			test-unit-debug test-integration-debug
 test-setup:			tests/node_modules
+
+test:
+	make -s test-unit-debug
+	make -s test-integration
 
 test-unit:
 	cargo test --quiet --tests
@@ -54,9 +60,7 @@ tests/zomes/%.wasm:		tests/zomes/%/src/*.rs tests/zomes/%/Cargo.toml Cargo.toml 
 	mv tests/zomes/target/wasm32-unknown-unknown/release/$*.wasm $@
 
 test-integration:		test-setup $(TEST_DNA)
-	cd tests; npx mocha integration/test_basic.js
-test-integration-debug:		test-setup $(TEST_DNA)
-	cd tests; RUST_LOG=info LOG_LEVEL=trace npx mocha integration/test_basic.js
+	cd tests; $(TEST_ENV_VARS) npx mocha $(MOCHA_OPTS) integration/test_basic.js
 
 
 
@@ -87,11 +91,11 @@ clean-files-all:	clean-remove-chaff
 clean-files-all-force:	clean-remove-chaff
 	git clean -fdx
 
-PRE_HDKE_VERSION = whi_hdk_extensions = "0.4"
-NEW_HDKE_VERSION = whi_hdk_extensions = "0.5"
+PRE_HDKE_VERSION = whi_hdk_extensions = "0.5"
+NEW_HDKE_VERSION = whi_hdk_extensions = "0.6"
 
-PRE_HH_VERSION = "0.2.2", features
-NEW_HH_VERSION = "0.2.6", features
+PRE_HH_VERSION = "0.2.6", features
+NEW_HH_VERSION = "0.3.0-beta-dev.24", features
 
 GG_REPLACE_LOCATIONS = ':(exclude)*.lock' Cargo.toml tests/zomes/
 

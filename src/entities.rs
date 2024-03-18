@@ -8,6 +8,7 @@ use hdi_extensions::{
 };
 use crate::{
     EntityId,
+    utils::create_link_input,
 };
 
 
@@ -24,18 +25,18 @@ where
 #[macro_export]
 macro_rules! entry_model {
     ($types:ident::$name:ident( $entry:ident ) ) => {
-	entry_model!( $types::$name, $entry );
+        entry_model!( $types::$name, $entry );
     };
     ($types:ident::$name:ident, $entry:ident ) => {
-	impl hc_crud::EntryModel<$types> for $entry {
-	    fn name() -> &'static str { stringify!($name) }
-	    fn get_type(&self) -> String {
-		$entry::name().to_lowercase()
-	    }
-	    fn to_input(&self) -> $types {
-		$types::$name(self.clone())
-	    }
-	}
+        impl hc_crud::EntryModel<$types> for $entry {
+            fn name() -> &'static str { stringify!($name) }
+            fn get_type(&self) -> String {
+                $entry::name().to_lowercase()
+            }
+            fn to_input(&self) -> $types {
+                $types::$name(self.clone())
+            }
+        }
     };
 }
 
@@ -65,69 +66,72 @@ impl<T> Entity<T> {
     /// Link this entity to the given base with a specific tag.  Shortcut for [`hdk::prelude::create_link`]
     pub fn link_from<L,E,B>(&self, base: &B, link_type: L, tag_input: Option<Vec<u8>>) -> ExternResult<ActionHash>
     where
-	B: Into<AnyLinkableHash> + Clone,
-	ScopedLinkType: TryFrom<L, Error = E>,
+        B: Into<AnyLinkableHash> + Clone,
+        ScopedLinkType: TryFrom<L, Error = E>,
         WasmError: From<E>,
     {
         Ok( match tag_input {
-	    None => create_link( base.to_owned(), self.id.to_owned(), link_type, () )?,
-	    Some(input) => create_link( base.to_owned(), self.id.to_owned(), link_type, input )?,
-	})
+            None => create_link( base.to_owned(), self.id.to_owned(), link_type, () )?,
+            Some(input) => create_link( base.to_owned(), self.id.to_owned(), link_type, input )?,
+        })
     }
 
     /// Link the given target to this entity with a specific tag.  Shortcut for [`hdk::prelude::create_link`]
     pub fn link_to<L,E,B>(&self, target: &B, link_type: L, tag_input: Option<Vec<u8>>) -> ExternResult<ActionHash>
     where
-	B: Into<AnyLinkableHash> + Clone,
-	ScopedLinkType: TryFrom<L, Error = E>,
+        B: Into<AnyLinkableHash> + Clone,
+        ScopedLinkType: TryFrom<L, Error = E>,
         WasmError: From<E>,
     {
         Ok( match tag_input {
-	    None => create_link( self.id.to_owned(), target.to_owned(), link_type, () )?,
-	    Some(input) => create_link( self.id.to_owned(), target.to_owned(), link_type, input )?,
-	})
+            None => create_link( self.id.to_owned(), target.to_owned(), link_type, () )?,
+            Some(input) => create_link( self.id.to_owned(), target.to_owned(), link_type, input )?,
+        })
     }
 
     /// Delete an existing link from the 'current_base' and create a new link from the 'new_base'
     pub fn move_link_from<LT,E,B>(&self, link_type: LT, tag_input: Option<Vec<u8>>, current_base: &B, new_base: &B) -> ExternResult<ActionHash>
     where
-	B: Into<AnyLinkableHash> + Clone,
-	LT: LinkTypeFilterExt + Clone + std::fmt::Debug,
+        B: Into<AnyLinkableHash> + Clone,
+        LT: LinkTypeFilterExt + Clone + std::fmt::Debug,
         ScopedLinkType: TryFrom<LT, Error = E>,
         WasmError: From<E>,
     {
-	let tag_filter = tag_input.to_owned().map( |tag| LinkTag::new( tag ) );
-	let all_links = get_links(
-	    current_base.clone(),
-	    link_type.to_owned(),
-	    tag_filter.to_owned(),
-	)?;
+        let all_links = get_links(
+            create_link_input(
+                current_base,
+                &link_type,
+                &tag_input,
+            )?
+        )?;
 
-	if let Some(current_link) = all_links.into_iter().find(|link| {
-	    link.target == self.id.to_owned().into()
-	}) {
+        if let Some(current_link) = all_links.into_iter().find(|link| {
+            link.target == self.id.to_owned().into()
+        }) {
             delete_link( current_link.create_link_hash )?;
-	}
-	else {
-	    Err(guest_error!(format!(
+        }
+        else {
+            Err(guest_error!(format!(
                 "Unexpected State: Aborting 'move_from_link' because existing link was not found"
             )))?;
-	};
+        };
 
-	let new_links = get_links(
-	    new_base.clone(),
-	    link_type.to_owned(),
-	    tag_filter.to_owned(),
-	)?;
+        let new_links = get_links(
+            create_link_input(
+                new_base,
+                &link_type,
+                &tag_input,
+            )?
+        )?;
 
-	if let Some(existing_link) = new_links.into_iter().find(|link| {
-	    link.target == self.id.to_owned().into()
-	}) {
+        if let Some(existing_link) = new_links.into_iter().find(|link| {
+            link.target == self.id.to_owned().into()
+        }) {
             Ok( existing_link.create_link_hash )
-	}
-	else {
+        }
+        else {
             self.link_from( new_base, link_type, tag_input )
-	}
+        }
     }
 }
 
@@ -148,19 +152,19 @@ pub mod tests {
 
     #[test]
     fn entity_test() {
-	let bytes = rand::thread_rng().gen::<[u8; 32]>();
-	let ahash = holo_hash::ActionHash::from_raw_32( bytes.to_vec() );
-	let ehash = holo_hash::EntryHash::from_raw_32( bytes.to_vec() );
-	let hhash = holo_hash::ActionHash::from_raw_32( bytes.to_vec() );
+        let bytes = rand::thread_rng().gen::<[u8; 32]>();
+        let ahash = holo_hash::ActionHash::from_raw_32( bytes.to_vec() );
+        let ehash = holo_hash::EntryHash::from_raw_32( bytes.to_vec() );
+        let hhash = holo_hash::ActionHash::from_raw_32( bytes.to_vec() );
 
-	let item = Entity {
-	    id: ahash.clone(),
-	    action: hhash,
-	    address: ehash,
-	    ctype: String::from("boolean"),
-	    content: true,
-	};
+        let item = Entity {
+            id: ahash.clone(),
+            action: hhash,
+            address: ehash,
+            ctype: String::from("boolean"),
+            content: true,
+        };
 
-	assert_eq!( item.ctype, String::from("boolean") );
+        assert_eq!( item.ctype, String::from("boolean") );
     }
 }

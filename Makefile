@@ -4,22 +4,20 @@ SHELL		= bash
 #
 # Project
 #
-use-local-holo-hash:
-	cd tests; npm uninstall @spartan-hc/holo-hash
-	cd tests; npm install --save ../../holo-hash-js/
-use-npm-holo-hash:
-	cd tests; npm uninstall @spartan-hc/holo-hash
-	cd tests; npm install --save @spartan-hc/holo-hash
+npm-reinstall-local:
+	cd tests; npm uninstall $(NPM_PACKAGE); npm i --save $(LOCAL_PATH)
+npm-reinstall-public:
+	cd tests; npm uninstall $(NPM_PACKAGE); npm i --save $(NPM_PACKAGE)
 
-use-local-backdrop:
-	cd tests; npm uninstall @spartan-hc/holochain-backdrop
-	cd tests; npm install --save-dev ../../node-holochain-backdrop
-use-npm-backdrop:
-	cd tests; npm uninstall @spartan-hc/holochain-backdrop
-	cd tests; npm install --save-dev @spartan-hc/holochain-backdrop
+npm-use-app-interface-client-public:
+npm-use-app-interface-client-local:
+npm-use-app-interface-client-%:
+	NPM_PACKAGE=@spartan-hc/app-interface-client LOCAL_PATH=../../app-interface-client-js make npm-reinstall-$*
 
-use-local:		use-local-client use-local-backdrop
-use-npm:		  use-npm-client   use-npm-backdrop
+npm-use-backdrop-public:
+npm-use-backdrop-local:
+npm-use-backdrop-%:
+	NPM_PACKAGE=@spartan-hc/holochain-backdrop LOCAL_PATH=../../node-holochain-backdrop make npm-reinstall-$*
 
 
 
@@ -59,7 +57,10 @@ tests/zomes/%.wasm:		tests/zomes/%/src/*.rs tests/zomes/%/Cargo.toml Cargo.toml 
 	    --package $*
 	mv tests/zomes/target/wasm32-unknown-unknown/release/$*.wasm $@
 
-test-integration:		test-setup $(TEST_DNA)
+test-integration:
+	make -s test-integration-basic
+
+test-integration-basic:		test-setup $(TEST_DNA)
 	cd tests; $(TEST_ENV_VARS) npx mocha $(MOCHA_OPTS) integration/test_basic.js
 
 
@@ -91,11 +92,11 @@ clean-files-all:	clean-remove-chaff
 clean-files-all-force:	clean-remove-chaff
 	git clean -fdx
 
-PRE_HDKE_VERSION = whi_hdk_extensions = "0.5"
-NEW_HDKE_VERSION = whi_hdk_extensions = "0.6"
+PRE_HDKE_VERSION = whi_hdk_extensions = "0.6"
+NEW_HDKE_VERSION = whi_hdk_extensions = "0.7"
 
-PRE_HH_VERSION = "0.2.6", features
-NEW_HH_VERSION = "0.3.0-beta-dev.24", features
+PRE_HH_VERSION = "0.3.0-beta-dev.24", features
+NEW_HH_VERSION = "0.3.0-beta-dev.26", features
 
 GG_REPLACE_LOCATIONS = ':(exclude)*.lock' Cargo.toml tests/zomes/
 

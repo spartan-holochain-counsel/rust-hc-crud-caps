@@ -44,19 +44,22 @@ let app_port;
 describe("CAPS", () => {
     const holochain			= new Holochain({
 	"timeout": 60_000,
-	"default_stdout_loggers": log._level > 3,
+	"default_stdout_loggers": log.level_rank > 3,
     });
 
     before(async function () {
 	this.timeout( 30_000 );
 
-	await holochain.backdrop({
-	    "test": {
-		[DNA_NAME]:		DNA_PATH,
+	await holochain.install([
+	    "alice",
+	], {
+	    "app_name": "test",
+	    "bundle": {
+		[DNA_NAME]:	DNA_PATH,
 	    },
 	});
 
-	app_port			= await holochain.appPorts()[0];
+	app_port			= await holochain.ensureAppPort();
     });
 
     linearSuite("Basic", basic_tests.bind( this, holochain ) );

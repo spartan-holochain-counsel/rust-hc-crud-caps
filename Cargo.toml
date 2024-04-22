@@ -14,8 +14,8 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 serde = "1"
-whi_hdk_extensions = "0.6"
+whi_hdk_extensions = "0.7"
 
 [dev-dependencies]
-holo_hash = { version = "0.3.0-beta-dev.24", features = [ "hashing" ] } # needed for "from_raw_32" method
+holo_hash = { version = "0.3.0-beta-dev.26", features = [ "hashing" ] } # needed for "from_raw_32" method
 rand = "0.8.3"

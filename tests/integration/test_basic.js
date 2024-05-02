@@ -16,7 +16,7 @@ import {
     AppInterfaceClient,
 }					from '@spartan-hc/app-interface-client';
 import { Zomelet }			from '@spartan-hc/zomelets';
-import { Entity }			from '@spartan-hc/caps-entities';
+import { Entity }			from '@spartan-hc/entities';
 import {
     linearSuite,
 }					from '../utils.js';
@@ -39,6 +39,7 @@ async function expect_reject ( cb, error, message ) {
 
 const DNA_NAME				= "happy_path";
 let app_port;
+let installations;
 
 
 describe("CAPS", () => {
@@ -50,7 +51,7 @@ describe("CAPS", () => {
     before(async function () {
 	this.timeout( 30_000 );
 
-	await holochain.install([
+	installations			= await holochain.install([
 	    "alice",
 	], {
 	    "app_name": "test",
@@ -148,7 +149,9 @@ function basic_tests () {
 	client				= new AppInterfaceClient( app_port, {
 	    "logging": process.env.LOG_LEVEL || "fatal",
 	});
-	app_client			= await client.app( "test-alice" );
+
+	const alice_token		= installations.alice.test.auth.token;
+	app_client			= await client.app( alice_token );
 	agent_context			= app_client.agent;
 
 	({

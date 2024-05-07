@@ -17,7 +17,7 @@ npm-use-app-interface-client-%:
 npm-use-backdrop-public:
 npm-use-backdrop-local:
 npm-use-backdrop-%:
-	NPM_PACKAGE=@spartan-hc/holochain-backdrop LOCAL_PATH=../../node-holochain-backdrop make npm-reinstall-$*
+	NPM_PACKAGE=@spartan-hc/holochain-backdrop LOCAL_PATH=../../node-backdrop make npm-reinstall-$*
 
 npm-use-entities-public:
 npm-use-entities-local:
@@ -97,11 +97,11 @@ clean-files-all:	clean-remove-chaff
 clean-files-all-force:	clean-remove-chaff
 	git clean -fdx
 
-PRE_HDKE_VERSION = whi_hdk_extensions = "0.7"
-NEW_HDKE_VERSION = whi_hdk_extensions = "0.8"
+PRE_HDKE_VERSION = whi_hdk_extensions = "0.8"
+NEW_HDKE_VERSION = whi_hdk_extensions = "0.9"
 
-PRE_HH_VERSION = "0.3.0-beta-dev.26", features
-NEW_HH_VERSION = "0.3.0-beta-dev.28", features
+PRE_HH_VERSION = version = "0.3.0-beta-dev.28"
+NEW_HH_VERSION = version = "0.4.0-dev.1"
 
 GG_REPLACE_LOCATIONS = ':(exclude)*.lock' Cargo.toml tests/zomes/
 

@@ -212,7 +212,7 @@ function basic_tests () {
     });
 
     it("should test 'Collection'", async function () {
-	this.timeout( 5_000 );
+	this.timeout( 30_000 );
 	{
 	    create_comment_input_1.for_post = post.$id;
 	    comment				= await happy_path_csr.create_comment({

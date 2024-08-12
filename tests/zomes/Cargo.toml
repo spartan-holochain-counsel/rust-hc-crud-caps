@@ -2,3 +2,4 @@
 members = [
   "happy_path",
 ]
+resolver = "2"

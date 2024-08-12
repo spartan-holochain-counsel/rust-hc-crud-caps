@@ -97,11 +97,11 @@ clean-files-all:	clean-remove-chaff
 clean-files-all-force:	clean-remove-chaff
 	git clean -fdx
 
-PRE_HDKE_VERSION = whi_hdk_extensions = "0.8"
-NEW_HDKE_VERSION = whi_hdk_extensions = "0.9"
+PRE_HDKE_VERSION = whi_hdk_extensions = "0.9"
+NEW_HDKE_VERSION = whi_hdk_extensions = "0.10"
 
-PRE_HH_VERSION = version = "0.3.0-beta-dev.28"
-NEW_HH_VERSION = version = "0.4.0-dev.1"
+PRE_HH_VERSION = holo_hash = { version = "0.4.0-dev.1"
+NEW_HH_VERSION = holo_hash = { version = "=0.4.0-dev.9"
 
 GG_REPLACE_LOCATIONS = ':(exclude)*.lock' Cargo.toml tests/zomes/
 

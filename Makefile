@@ -79,6 +79,7 @@ publish-crate:			test .cargo/credentials
 	make docs
 	cargo publish
 .cargo/credentials:
+	mkdir -p .cargo
 	cp ~/$@ $@
 
 

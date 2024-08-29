@@ -1,5 +1,7 @@
-target
-.cargo
-tests/zomes/*.wasm
-tests/dnas/*.dna
-tests/node_modules
+/target
+/.cargo
+/.rustup
+/tests/node_modules
+/tests/zomes/target
+/tests/zomes/*.wasm
+/tests/dnas/*.dna
